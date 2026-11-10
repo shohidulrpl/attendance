@@ -608,7 +608,7 @@
         // Admin: Delete All Staff
         document.getElementById('btn-admin-delete-all').addEventListener('click', () => {
             if (!currentUser) return;
-            showModal("সতর্কতা!", "আপনি কি নিশ্চিত যে সকল স্টাফের প্রোফাইল মুছে ফেলতে চান? এটি আর ফিরিয়ে আনা যাবে না।", "error", async () => {
+            showModal("সতর্কতা!", "আপনি কি নিশ্চিত যে সকল স্টাফের প্রোফাইল মুছে ফেলতে চান? এটি আর ফিরিয়ে আনা যাবেচ্ছ না।", "error", async () => {
                 try {
                     const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
                     const usersSnap = await getDocs(usersRef);
@@ -763,7 +763,7 @@
                 await sendPasswordResetEmail(auth, email);
                 showModal("ইমেইল চেক করুন", "আপনার ইমেইলে পাসওয়ার্ড রিসেট করার লিংক পাঠানো হয়েছে।", "success");
             } catch (error) {
-                showModal("এরর", "সঠিক ইমেইল ঠিকানা দিন বা আবার চেষ্টা করুন।", "error");
+                showModal("এরর", "सঠিক ইমেইল ঠিকানা দিন বা আবার চেষ্টা করুন।", "error");
             }
         });
 
