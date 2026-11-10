@@ -178,19 +178,6 @@
             <div class="space-y-4">
                 <h3 class="text-xl font-bold text-slate-800 mb-4 px-2">ড্যাশবোর্ড (চলতি মাস)</h3>
                 
-                <!-- Total Days Card -->
-                <div class="glass-card rounded-2xl p-6 border-l-4 border-blue-500">
-                    <p class="text-sm font-semibold text-slate-500 mb-1">মোট কর্মদিবস</p>
-                    <div class="flex justify-between items-end">
-                        <h3 class="text-4xl font-bold text-slate-800" id="stat-total">30</h3>
-                        <div class="p-2 bg-blue-50 text-blue-500 rounded-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Present Card -->
                 <div class="glass-card rounded-2xl p-6 border-l-4 border-green-500">
                     <p class="text-sm font-semibold text-slate-500 mb-1">মোট উপস্থিত</p>
@@ -635,13 +622,13 @@
                 return;
             }
 
-            // Check entry time limit (must be before or exactly at 9:00 AM)
+            // Check entry time limit (must be between 6:00 AM and 9:00 AM)
             if (timeType === 'entry') {
                 const currentHour = now.getHours();
                 const currentMinute = now.getMinutes();
-                // 9:00 AM is acceptable, but 9:01 AM or later is rejected
-                if (currentHour > 9 || (currentHour === 9 && currentMinute > 0)) {
-                    showModal("সময় পেরিয়ে গেছে", "সকাল ৯টার পর প্রবেশের হাজিরা দেওয়া সম্ভব নয়।", "error");
+                // Check if outside 6 AM to 9 AM range
+                if (currentHour < 6 || currentHour > 9 || (currentHour === 9 && currentMinute > 0)) {
+                    showModal("সময় পেরিয়ে গেছে", "প্রবেশের হাজিরা কেবল প্রতিদিন সকাল ৬:০০ থেকে ৯:০০ পর্যন্ত দেওয়া যাবে।", "error");
                     submitBtn.disabled = false;
                     spinner.classList.add('hidden');
                     return;
@@ -652,15 +639,25 @@
             try {
                 const checkRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'attendance', dateStr);
                 const checkSnap = await getDoc(checkRef);
-                if (checkSnap.exists()) {
-                    const data = checkSnap.data();
-                    if (timeType === 'entry' && data.entryTime) {
+                
+                if (timeType === 'entry') {
+                    if (checkSnap.exists() && checkSnap.data().entryTime) {
                         showModal("সতর্কতা", "আপনি ইতিমধ্যে আজকের প্রবেশের সময় (Entry) জমা দিয়েছেন।", "info");
                         submitBtn.disabled = false;
                         spinner.classList.add('hidden');
                         return;
                     }
-                    if (timeType === 'exit' && data.exitTime) {
+                }
+
+                if (timeType === 'exit') {
+                    // Logic: Must have an entry to give exit
+                    if (!checkSnap.exists() || !checkSnap.data().entryTime) {
+                        showModal("সতর্কতা", "আপনি আজ প্রবেশের হাজিরা দেননি। কেবলমাত্র প্রবেশের হাজিরা থাকলেই বের হওয়ার সময় জমা দেওয়া যাবে।", "error");
+                        submitBtn.disabled = false;
+                        spinner.classList.add('hidden');
+                        return;
+                    }
+                    if (checkSnap.exists() && checkSnap.data().exitTime) {
                         showModal("সতর্কতা", "আপনি ইতিমধ্যে আজকের বের হওয়ার সময় (Exit) জমা দিয়েছেন।", "info");
                         submitBtn.disabled = false;
                         spinner.classList.add('hidden');
