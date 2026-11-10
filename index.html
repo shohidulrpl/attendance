@@ -77,6 +77,9 @@
             <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1">পাসওয়ার্ড</label>
                 <input type="password" id="password" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all" placeholder="••••••••">
+                <div class="text-right mt-1" id="forgot-pass-container">
+                    <button type="button" id="btn-forgot-password" class="text-sm text-green-600 hover:underline font-medium">পাসওয়ার্ড ভুলে গেছেন?</button>
+                </div>
             </div>
             <div id="auth-error" class="text-red-500 text-sm font-medium hidden bg-red-50 p-3 rounded-lg border border-red-100"></div>
             
@@ -90,79 +93,79 @@
     <div id="app-screen" class="w-full max-w-5xl hidden transition-all duration-500 opacity-0">
         
         <!-- Header -->
-        <div class="glass-card rounded-2xl p-6 mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-4">
-                <div class="p-3 bg-green-100 text-green-600 rounded-xl">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="glass-card rounded-xl p-4 mb-4 flex justify-between items-center gap-2">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-green-100 text-green-600 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-2xl md:text-3xl font-bold text-slate-800">অফিস স্টাফ হাজিরা খাতা</h1>
-                    <p class="text-slate-500 mt-2 text-lg flex items-center gap-2">নাম: <span id="display-user-name" class="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500 text-4xl drop-shadow-sm tracking-wide">লোড হচ্ছে...</span></p>
+                    <h1 class="text-lg md:text-2xl font-bold text-slate-800 leading-tight">স্টাফ হাজিরা</h1>
+                    <p class="text-slate-500 text-sm md:text-base flex items-center gap-1 mt-1">নাম: <span id="display-user-name" class="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500 text-lg md:text-xl drop-shadow-sm tracking-wide">লোড হচ্ছে...</span></p>
                 </div>
             </div>
-            <button id="btn-logout" class="flex items-center gap-2 text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg font-semibold transition-all">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button id="btn-logout" class="flex items-center gap-1 text-red-500 hover:bg-red-50 p-2 md:px-4 md:py-2 rounded-lg font-semibold transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
-                লগআউট
+                <span class="hidden md:inline">লগআউট</span>
             </button>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="flex flex-col lg:flex-row gap-4">
             
             <!-- Left Side: Date Info & Form -->
-            <div class="lg:col-span-2 space-y-8">
+            <div class="flex-1 space-y-4">
                 <!-- Date Header -->
-                <div class="glass-card rounded-2xl p-6 flex justify-between items-center bg-gradient-to-r from-emerald-500 to-green-600 text-white border-none">
+                <div class="glass-card rounded-xl p-4 flex justify-between items-center bg-gradient-to-r from-emerald-500 to-green-600 text-white border-none shadow-md">
                     <div>
-                        <p class="text-emerald-100 font-medium mb-1">আজকের দিন</p>
-                        <h2 class="text-3xl font-bold" id="display-day">লোড হচ্ছে...</h2>
+                        <p class="text-emerald-100 text-xs font-medium mb-1">আজকের দিন</p>
+                        <h2 class="text-xl md:text-3xl font-bold" id="display-day">লোড হচ্ছে...</h2>
                     </div>
                     <div class="text-right">
-                        <p class="text-emerald-100 font-medium mb-1" id="display-month">লোড হচ্ছে...</p>
-                        <h2 class="text-3xl font-bold" id="display-date">--.--.--</h2>
+                        <p class="text-emerald-100 text-xs font-medium mb-1" id="display-month">লোড হচ্ছে...</p>
+                        <h2 class="text-xl md:text-3xl font-bold" id="display-date">--.--.--</h2>
                     </div>
                 </div>
 
                 <!-- Attendance Submission Section -->
-                <div class="glass-card rounded-2xl p-8">
-                    <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="glass-card rounded-xl p-5 shadow-sm">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         আজকের হাজিরা দিন
                     </h3>
                     
-                    <form id="attendance-form" class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <form id="attendance-form" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">তারিখ</label>
-                                <input type="text" id="input-date" readonly class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 focus:outline-none cursor-not-allowed">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">তারিখ</label>
+                                <input type="text" id="input-date" readonly class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 focus:outline-none cursor-not-allowed text-sm">
                             </div>
                             
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">হাজিরার ধরন</label>
-                                <select id="input-time-type" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm cursor-pointer">
-                                    <option value="entry">প্রবেশের সময় (Entry)</option>
-                                    <option value="exit">বের হওয়ার সময় (Exit)</option>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">ধরন</label>
+                                <select id="input-time-type" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm cursor-pointer text-sm">
+                                    <option value="entry">প্রবেশ (Entry)</option>
+                                    <option value="exit">বাহির (Exit)</option>
                                 </select>
                             </div>
 
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">সময়</label>
-                                <input type="time" id="input-time" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm cursor-pointer">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">সময়</label>
+                                <input type="time" id="input-time" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm cursor-pointer text-sm">
                             </div>
 
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">স্ট্যাটাস</label>
-                                <input type="text" id="input-status" value="উপস্থিত (Present)" readonly class="w-full px-4 py-3 rounded-xl border border-green-200 bg-green-50 text-green-700 font-bold focus:outline-none cursor-not-allowed text-center">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">স্ট্যাটাস</label>
+                                <input type="text" id="input-status" value="উপস্থিত" readonly class="w-full px-3 py-2 rounded-lg border border-green-200 bg-green-50 text-green-700 font-bold focus:outline-none cursor-not-allowed text-center text-sm">
                             </div>
                         </div>
 
-                        <div class="pt-4">
-                            <button type="submit" id="btn-submit" class="w-full md:w-auto md:min-w-[200px] btn-gradient text-white text-lg font-semibold py-3 px-8 rounded-xl flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+                        <div class="pt-2">
+                            <button type="submit" id="btn-submit" class="w-full btn-gradient text-white text-base font-semibold py-3 rounded-xl flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
                                 <span>হাজিরা জমা দিন</span>
                                 <svg id="loading-spinner" class="animate-spin h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -174,32 +177,33 @@
                 </div>
             </div>
 
-            <!-- Right Side: Stats Cards -->
-            <div class="space-y-4">
-                <h3 class="text-xl font-bold text-slate-800 mb-4 px-2">ড্যাশবোর্ড (চলতি মাস)</h3>
-                
-                <!-- Present Card -->
-                <div class="glass-card rounded-2xl p-6 border-l-4 border-green-500">
-                    <p class="text-sm font-semibold text-slate-500 mb-1">মোট উপস্থিত</p>
-                    <div class="flex justify-between items-end">
-                        <h3 class="text-4xl font-bold text-slate-800" id="stat-present">0</h3>
-                        <div class="p-2 bg-green-50 text-green-500 rounded-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+            <!-- Right Side: Stats Cards (Mobile Grid) -->
+            <div class="w-full lg:w-64 flex flex-col justify-end">
+                <h3 class="text-sm md:text-lg font-bold text-slate-800 mb-2 px-1 hidden lg:block">চলতি মাস</h3>
+                <div class="grid grid-cols-2 lg:grid-cols-1 gap-3">
+                    <!-- Present Card -->
+                    <div class="glass-card rounded-xl p-4 border-l-4 border-green-500 flex flex-col justify-between">
+                        <p class="text-xs font-semibold text-slate-500 mb-1">মোট উপস্থিত</p>
+                        <div class="flex justify-between items-end">
+                            <h3 class="text-2xl md:text-3xl font-bold text-slate-800" id="stat-present">0</h3>
+                            <div class="p-1.5 bg-green-50 text-green-500 rounded-md">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Absent Card -->
-                <div class="glass-card rounded-2xl p-6 border-l-4 border-red-500">
-                    <p class="text-sm font-semibold text-slate-500 mb-1">মোট অনুপস্থিত</p>
-                    <div class="flex justify-between items-end">
-                        <h3 class="text-4xl font-bold text-slate-800" id="stat-absent">0</h3>
-                        <div class="p-2 bg-red-50 text-red-500 rounded-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                    <!-- Absent Card -->
+                    <div class="glass-card rounded-xl p-4 border-l-4 border-red-500 flex flex-col justify-between">
+                        <p class="text-xs font-semibold text-slate-500 mb-1">মোট অনুপস্থিত</p>
+                        <div class="flex justify-between items-end">
+                            <h3 class="text-2xl md:text-3xl font-bold text-slate-800" id="stat-absent">0</h3>
+                            <div class="p-1.5 bg-red-50 text-red-500 rounded-md">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -273,7 +277,7 @@
     <!-- Firebase Script Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ==========================================
@@ -400,6 +404,7 @@
             document.getElementById('tab-register').classList.replace('text-green-600', 'text-slate-400');
             document.getElementById('tab-register').classList.replace('border-green-600', 'border-transparent');
             document.getElementById('name-field').classList.add('hidden');
+            document.getElementById('forgot-pass-container').classList.remove('hidden');
             document.getElementById('btn-auth-action').textContent = "লগইন করুন";
             document.getElementById('auth-error').classList.add('hidden');
         });
@@ -411,6 +416,7 @@
             document.getElementById('tab-login').classList.replace('text-green-600', 'text-slate-400');
             document.getElementById('tab-login').classList.replace('border-green-600', 'border-transparent');
             document.getElementById('name-field').classList.remove('hidden');
+            document.getElementById('forgot-pass-container').classList.add('hidden');
             document.getElementById('btn-auth-action').textContent = "রেজিস্ট্রেশন করুন";
             document.getElementById('auth-error').classList.add('hidden');
         });
@@ -588,8 +594,28 @@
                 }
                 errorDiv.classList.add('hidden');
             } catch (error) {
-                errorDiv.textContent = isLoginMode ? "লগইন ব্যর্থ। ইমেইল/পাসওয়ার্ড চেক করুন।" : "রেজিস্ট্রেশন ব্যর্থ। অন্য ইমেইল ব্যবহার করুন বা পরে চেষ্টা করুন।";
+                if (error.code === 'auth/email-already-in-use') {
+                    errorDiv.textContent = "এই ইমেইলটি ইতিমধ্যে ব্যবহৃত হয়েছে। অন্য ইমেইল দিন বা লগইন করুন।";
+                } else if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                    errorDiv.textContent = "লগইন ব্যর্থ। সঠিক ইমেইল ও পাসওয়ার্ড চেক করুন।";
+                } else {
+                    errorDiv.textContent = isLoginMode ? "লগইন ব্যর্থ।" : "রেজিস্ট্রেশন ব্যর্থ। আবার চেষ্টা করুন।";
+                }
                 errorDiv.classList.remove('hidden');
+            }
+        });
+
+        // Forgot Password Logic
+        document.getElementById('btn-forgot-password').addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            if (!email) {
+                return showModal("সতর্কতা", "পাসওয়ার্ড রিসেট করতে আগে উপরের বক্সে আপনার ইমেইলটি লিখুন এবং তারপর এই বাটনে ক্লিক করুন।", "info");
+            }
+            try {
+                await sendPasswordResetEmail(auth, email);
+                showModal("ইমেইল চেক করুন", "আপনার ইমেইলে পাসওয়ার্ড রিসেট করার লিংক পাঠানো হয়েছে।", "success");
+            } catch (error) {
+                showModal("এরর", "সঠিক ইমেইল ঠিকানা দিন বা আবার চেষ্টা করুন।", "error");
             }
         });
 
