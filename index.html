@@ -556,6 +556,26 @@
         // ==========================================
         // 5. Auth State & Actions
         // ==========================================
+        
+        // Helper function for fast and smooth screen switching without blank screen issues
+        function switchScreen(screenId) {
+            const screens = ['auth-screen', 'app-screen', 'admin-screen'];
+            screens.forEach(id => {
+                const el = document.getElementById(id);
+                if (id === screenId) {
+                    el.classList.remove('hidden');
+                    // Force browser reflow to apply display:block before opacity transition
+                    void el.offsetWidth;
+                    el.classList.remove('opacity-0');
+                    el.classList.add('opacity-100');
+                } else {
+                    el.classList.add('hidden');
+                    el.classList.add('opacity-0');
+                    el.classList.remove('opacity-100');
+                }
+            });
+        }
+
         function loadDashboardData(uid) {
             const now = new Date();
             const currentMonthYear = `${now.getMonth() + 1}-${now.getFullYear()}`;
@@ -591,35 +611,20 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                authScreen.classList.add('hidden');
-                authScreen.classList.remove('opacity-100');
-                
-                setTimeout(() => {
-                    if(user.email === ADMIN_EMAIL) {
-                        // Admin Mode
-                        appScreen.classList.add('hidden');
-                        adminScreen.classList.remove('hidden');
-                        setTimeout(() => adminScreen.classList.add('opacity-100'), 50);
-                        loadAdminPanel();
-                    } else {
-                        // User Mode
-                        adminScreen.classList.add('hidden');
-                        appScreen.classList.remove('hidden');
-                        setTimeout(() => appScreen.classList.add('opacity-100'), 50);
-                        loadUserProfile(user.uid);
-                        loadDashboardData(user.uid);
-                    }
-                }, 300);
+                if(user.email === ADMIN_EMAIL) {
+                    // Admin Mode
+                    switchScreen('admin-screen');
+                    loadAdminPanel();
+                } else {
+                    // User Mode
+                    switchScreen('app-screen');
+                    // Add slight delay to ensure DB writes from registration finished before fetching name
+                    setTimeout(() => loadUserProfile(user.uid), 500); 
+                    loadDashboardData(user.uid);
+                }
             } else {
                 currentUser = null;
-                appScreen.classList.remove('opacity-100');
-                adminScreen.classList.remove('opacity-100');
-                setTimeout(() => {
-                    appScreen.classList.add('hidden');
-                    adminScreen.classList.add('hidden');
-                    authScreen.classList.remove('hidden');
-                    setTimeout(() => authScreen.classList.add('opacity-100'), 50);
-                }, 300);
+                switchScreen('auth-screen');
                 if (unsubAttendance) unsubAttendance();
             }
         });
@@ -629,9 +634,14 @@
             const password = document.getElementById('password').value;
             const fullName = document.getElementById('fullname').value;
             const errorDiv = document.getElementById('auth-error');
+            const btnAction = document.getElementById('btn-auth-action');
             
             if (!email || !password) return showModal("সতর্কতা", "ইমেইল এবং পাসওয়ার্ড দিন।", "error");
             if (!isLoginMode && !fullName) return showModal("সতর্কতা", "রেজিস্ট্রেশনের জন্য আপনার নাম দিন।", "error");
+
+            const originalBtnText = btnAction.textContent;
+            btnAction.textContent = "অপেক্ষা করুন...";
+            btnAction.disabled = true;
 
             try {
                 if (isLoginMode) {
@@ -660,6 +670,9 @@
                     errorDiv.textContent = isLoginMode ? "লগইন ব্যর্থ।" : "রেজিস্ট্রেশন ব্যর্থ। আবার চেষ্টা করুন।";
                 }
                 errorDiv.classList.remove('hidden');
+            } finally {
+                btnAction.textContent = originalBtnText;
+                btnAction.disabled = false;
             }
         });
 
