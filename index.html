@@ -95,14 +95,14 @@
         <!-- Header -->
         <div class="glass-card rounded-xl p-4 mb-4 flex justify-between items-center gap-2">
             <div class="flex items-center gap-3">
-                <div class="p-2 bg-green-100 text-green-600 rounded-lg">
+                <div class="p-2 bg-green-100 text-green-600 rounded-lg shadow-inner">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-slate-800 leading-tight">স্টাফ হাজিরা</h1>
-                    <p class="text-slate-500 text-sm md:text-base flex items-center gap-1 mt-1">নাম: <span id="display-user-name" class="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500 text-lg md:text-xl drop-shadow-sm tracking-wide">লোড হচ্ছে...</span></p>
+                    <h1 class="text-xl md:text-3xl font-black text-slate-800 leading-tight tracking-tight">স্টাফ হাজিরা <span class="text-emerald-600 text-base md:text-xl font-bold block sm:inline mt-1 sm:mt-0">- রেডিয়েন্ট ফার্মা</span></h1>
+                    <p class="text-slate-500 text-sm md:text-base flex items-center gap-1 mt-1">নাম: <span id="display-user-name" class="font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 text-2xl md:text-4xl drop-shadow-md tracking-wide ml-1">লোড হচ্ছে...</span></p>
                 </div>
             </div>
             <button id="btn-logout" class="flex items-center gap-1 text-red-500 hover:bg-red-50 p-2 md:px-4 md:py-2 rounded-lg font-semibold transition-all">
@@ -234,7 +234,7 @@
 
         <div class="glass-card rounded-2xl p-8">
             <h3 class="text-xl font-bold text-slate-800 mb-6">হাজিরা সংশোধন করুন</h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end mb-6">
                 <div class="md:col-span-2">
                     <label class="block text-sm font-semibold text-slate-700 mb-2">স্টাফ নির্বাচন করুন</label>
                     <select id="admin-user-select" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
@@ -257,6 +257,15 @@
                     </div>
                 </div>
             </div>
+
+            <div class="border-t border-slate-200 pt-6 text-right">
+                <button id="btn-admin-delete-all" class="inline-flex items-center gap-2 bg-red-100 text-red-600 hover:bg-red-600 hover:text-white px-6 py-3 rounded-xl font-bold transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    সকল স্টাফ ডিলিট করুন
+                </button>
+            </div>
         </div>
     </div>
 
@@ -269,7 +278,10 @@
             </div>
             <div class="p-6 text-center">
                 <p id="modal-message" class="text-lg font-medium text-slate-600 mb-6"></p>
-                <button id="modal-close" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors">ঠিক আছে</button>
+                <div class="flex gap-3">
+                    <button id="modal-cancel" class="hidden flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-6 rounded-xl transition-colors">বাতিল</button>
+                    <button id="modal-close" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors">ঠিক আছে</button>
+                </div>
             </div>
         </div>
     </div>
@@ -322,10 +334,19 @@
         const modalTitle = document.getElementById('modal-title');
         const modalMessage = document.getElementById('modal-message');
         const modalIcon = document.getElementById('modal-icon');
+        let confirmCallback = null;
         
-        function showModal(title, message, type = 'info') {
+        function showModal(title, message, type = 'info', onConfirm = null) {
             modalTitle.textContent = title;
             modalMessage.textContent = message;
+            confirmCallback = onConfirm;
+            
+            const btnCancel = document.getElementById('modal-cancel');
+            if(onConfirm) {
+                btnCancel.classList.remove('hidden');
+            } else {
+                btnCancel.classList.add('hidden');
+            }
             
             // Reset Animation
             modalIcon.classList.remove('animate-pop');
@@ -345,8 +366,15 @@
 
             modal.classList.remove('hidden');
         }
+
         document.getElementById('modal-close').addEventListener('click', () => {
             modal.classList.add('hidden');
+            if(confirmCallback) confirmCallback();
+        });
+
+        document.getElementById('modal-cancel').addEventListener('click', () => {
+            modal.classList.add('hidden');
+            confirmCallback = null;
         });
 
         // Calculate distance between two coordinates
@@ -500,6 +528,28 @@
             }
         });
 
+        // Admin: Delete All Staff
+        document.getElementById('btn-admin-delete-all').addEventListener('click', () => {
+            if (!currentUser) return;
+            showModal("সতর্কতা!", "আপনি কি নিশ্চিত যে সকল স্টাফের প্রোফাইল মুছে ফেলতে চান? এটি আর ফিরিয়ে আনা যাবে না।", "error", async () => {
+                try {
+                    const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+                    const usersSnap = await getDocs(usersRef);
+                    
+                    let deletePromises = [];
+                    usersSnap.forEach(userDoc => {
+                        deletePromises.push(deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', userDoc.id)));
+                    });
+                    
+                    await Promise.all(deletePromises);
+                    showModal("সফল", "সকল স্টাফের প্রোফাইল সফলভাবে মুছে ফেলা হয়েছে।", "success");
+                    loadAdminPanel(); // Refresh list
+                } catch(e) {
+                    showModal("এরর", "স্টাফ ডিলিট করতে সমস্যা হয়েছে: " + e.message, "error");
+                }
+            });
+        });
+
         document.getElementById('btn-admin-logout').addEventListener('click', () => signOut(auth));
 
 
@@ -521,9 +571,17 @@
                 });
                 document.getElementById('stat-present').textContent = present;
                 
-                // Calculate Absent automatically (Passed days in the month - Present days)
-                const daysPassed = now.getDate(); // How many days have passed in the current month
-                let absent = daysPassed - present;
+                // Calculate Absent automatically (Working days passed in the month - Present days)
+                // Excludes Fridays (Day 5 in JS)
+                let workingDaysPassed = 0;
+                for (let i = 1; i <= now.getDate(); i++) {
+                    const d = new Date(now.getFullYear(), now.getMonth(), i);
+                    if (d.getDay() !== 5) { // 5 means Friday
+                        workingDaysPassed++;
+                    }
+                }
+                
+                let absent = workingDaysPassed - present;
                 if(absent < 0) absent = 0; // Fallback
                 
                 document.getElementById('stat-absent').textContent = absent; 
