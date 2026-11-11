@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Office Staff Attendance</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Add html2pdf library for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <!-- Beautiful Bengali Font -->
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -213,6 +215,14 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Download PDF Button -->
+                <button id="btn-download-report" class="mt-3 w-full bg-slate-800 hover:bg-slate-700 text-white text-sm md:text-base font-semibold py-3 rounded-xl flex justify-center items-center gap-2 transition-all shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    মাসিক রিপোর্ট (PDF)
+                </button>
             </div>
 
         </div>
@@ -305,6 +315,35 @@
                     সকল স্টাফ এক ক্লিকে ডিলিট করুন
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Hidden Report Template for PDF Generation -->
+    <div id="report-container" class="bg-white p-8 text-slate-800 absolute -left-[9999px] w-[800px] font-sans">
+        <div class="text-center mb-6 border-b-2 border-green-600 pb-4">
+            <h1 class="text-4xl font-bold text-green-700 mb-1">রেডিয়েন্ট ফার্মা</h1>
+            <h2 class="text-2xl font-semibold text-slate-700">মাসিক হাজিরা রিপোর্ট</h2>
+            <div class="flex justify-between items-end mt-6 text-lg font-medium">
+                <p>স্টাফের নাম: <span id="report-staff-name" class="font-bold text-xl text-emerald-700"></span></p>
+                <p>মাস: <span id="report-month" class="font-bold text-xl"></span></p>
+            </div>
+        </div>
+        <table class="w-full text-left border-collapse text-sm">
+            <thead>
+                <tr class="bg-green-100 text-green-800">
+                    <th class="p-3 border border-green-200">তারিখ</th>
+                    <th class="p-3 border border-green-200">বার</th>
+                    <th class="p-3 border border-green-200">প্রবেশের সময়</th>
+                    <th class="p-3 border border-green-200">বের হওয়ার সময়</th>
+                    <th class="p-3 border border-green-200">স্ট্যাটাস</th>
+                </tr>
+            </thead>
+            <tbody id="report-table-body">
+                <!-- Rows will be injected here via JS -->
+            </tbody>
+        </table>
+        <div class="mt-8 pt-4 border-t border-slate-200 text-center text-slate-400 text-xs">
+            এই রিপোর্টটি অফিস হাজিরা অ্যাপ থেকে স্বয়ংক্রিয়ভাবে জেনারেট করা হয়েছে।
         </div>
     </div>
 
@@ -658,6 +697,17 @@
             });
         }
 
+        // Shared utility to format time to AM/PM
+        function formatAMPM(timeStr) {
+            if(!timeStr) return '';
+            let [hours, minutes] = timeStr.split(':');
+            hours = parseInt(hours);
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; 
+            return `${hours.toString().padStart(2, '0')}:${minutes} ${ampm}`;
+        }
+
         function loadDashboardData(uid) {
             const now = new Date();
             const currentMonthYear = `${now.getMonth() + 1}-${now.getFullYear()}`;
@@ -702,16 +752,6 @@
                 const entryText = document.getElementById('entry-record-text');
                 const exitText = document.getElementById('exit-record-text');
                 
-                function formatAMPM(timeStr) {
-                    if(!timeStr) return '';
-                    let [hours, minutes] = timeStr.split(':');
-                    hours = parseInt(hours);
-                    const ampm = hours >= 12 ? 'PM' : 'AM';
-                    hours = hours % 12;
-                    hours = hours ? hours : 12; 
-                    return `${hours.toString().padStart(2, '0')}:${minutes} ${ampm}`;
-                }
-
                 if (todayEntry || todayExit) {
                     recordContainer.classList.remove('hidden');
                     
@@ -761,68 +801,101 @@
             }
         });
 
-        document.getElementById('btn-auth-action').addEventListener('click', async () => {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const fullName = document.getElementById('fullname').value;
-            const errorDiv = document.getElementById('auth-error');
-            const btnAction = document.getElementById('btn-auth-action');
+        // PDF Generation Logic
+        document.getElementById('btn-download-report').addEventListener('click', async () => {
+            if (!currentUser) return;
+            const btn = document.getElementById('btn-download-report');
+            const originalContent = btn.innerHTML;
             
-            if (!email || !password) return showModal("সতর্কতা", "ইমেইল এবং পাসওয়ার্ড দিন।", "error");
-            if (!isLoginMode && !fullName) return showModal("সতর্কতা", "রেজিস্ট্রেশনের জন্য আপনার নাম দিন।", "error");
-
-            const originalBtnText = btnAction.textContent;
-            btnAction.textContent = "অপেক্ষা করুন...";
-            btnAction.disabled = true;
+            btn.innerHTML = `
+                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                রিপোর্ট তৈরি হচ্ছে...
+            `;
+            btn.disabled = true;
 
             try {
-                if (isLoginMode) {
-                    await signInWithEmailAndPassword(auth, email, password);
-                } else {
-                    const userCred = await createUserWithEmailAndPassword(auth, email, password);
-                    // Save user profile for App header
-                    await setDoc(doc(db, 'artifacts', appId, 'users', userCred.user.uid, 'profile', 'info'), { 
-                        name: fullName, 
-                        email: email 
-                    });
-                    // Save to Public list so Admin can see them
-                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', userCred.user.uid), { 
-                        name: fullName, 
-                        email: email, 
-                        uid: userCred.user.uid 
-                    });
+                const now = new Date();
+                const currentMonthYear = `${now.getMonth() + 1}-${now.getFullYear()}`;
+                
+                // Fetch this month's attendance
+                const attendanceRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'attendance');
+                const q = query(attendanceRef, where("monthYear", "==", currentMonthYear));
+                const snap = await getDocs(q);
+                
+                const records = {};
+                snap.forEach(doc => {
+                    records[doc.id] = doc.data();
+                });
+
+                const tbody = document.getElementById('report-table-body');
+                tbody.innerHTML = '';
+                
+                const monthsBn = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+                const daysBn = ["রবিবার", "সোমবার", "মঙ্গলবার", "বুধবার", "বৃহস্পতিবার", "শুক্রবার", "শনিবার"];
+                
+                document.getElementById('report-staff-name').textContent = document.getElementById('display-user-name').textContent;
+                document.getElementById('report-month').textContent = `${monthsBn[now.getMonth()]} ${now.getFullYear()}`;
+
+                // Loop up to today's date
+                const today = now.getDate();
+                for (let i = 1; i <= today; i++) {
+                    const d = new Date(now.getFullYear(), now.getMonth(), i);
+                    const dateStr = `${i.toString().padStart(2, '0')}.${(now.getMonth() + 1).toString().padStart(2, '0')}.${now.getFullYear().toString().slice(-2)}`;
+                    const dayName = daysBn[d.getDay()];
+                    
+                    const record = records[dateStr];
+                    
+                    let entryTime = '-';
+                    let exitTime = '-';
+                    let statusHtml = '';
+                    let bgClass = 'bg-white';
+
+                    if (record && record.status === 'Present') {
+                        entryTime = formatAMPM(record.entryTime) || '-';
+                        exitTime = formatAMPM(record.exitTime) || '-';
+                        statusHtml = '<span class="text-green-600 font-bold">উপস্থিত</span>';
+                    } else {
+                        if (d.getDay() === 5) { // Friday
+                            statusHtml = '<span class="text-blue-500 font-bold">সাপ্তাহিক ছুটি</span>';
+                            bgClass = 'bg-slate-50';
+                        } else {
+                            statusHtml = '<span class="text-red-500 font-bold">অনুপস্থিত</span>';
+                            bgClass = 'bg-red-50';
+                        }
+                    }
+
+                    const tr = document.createElement('tr');
+                    tr.className = `border border-slate-200 ${bgClass}`;
+                    tr.innerHTML = `
+                        <td class="p-3 border border-slate-200 font-medium">${dateStr}</td>
+                        <td class="p-3 border border-slate-200">${dayName}</td>
+                        <td class="p-3 border border-slate-200">${entryTime}</td>
+                        <td class="p-3 border border-slate-200">${exitTime}</td>
+                        <td class="p-3 border border-slate-200">${statusHtml}</td>
+                    `;
+                    tbody.appendChild(tr);
                 }
-                errorDiv.classList.add('hidden');
-            } catch (error) {
-                if (error.code === 'auth/email-already-in-use') {
-                    errorDiv.textContent = "এই ইমেইলটি ইতিমধ্যে ব্যবহৃত হয়েছে। অন্য ইমেইল দিন বা লগইন করুন।";
-                } else if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-                    errorDiv.textContent = "লগইন ব্যর্থ। সঠিক ইমেইল ও পাসওয়ার্ড চেক করুন।";
-                } else {
-                    errorDiv.textContent = isLoginMode ? "লগইন ব্যর্থ।" : "রেজিস্ট্রেশন ব্যর্থ। আবার চেষ্টা করুন।";
-                }
-                errorDiv.classList.remove('hidden');
+
+                // Call html2pdf
+                const element = document.getElementById('report-container');
+                const opt = {
+                  margin:       [15, 15, 15, 15],
+                  filename:     `Attendance_Report_${monthsBn[now.getMonth()]}.pdf`,
+                  image:        { type: 'jpeg', quality: 0.98 },
+                  html2canvas:  { scale: 2, useCORS: true },
+                  jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+
+                await html2pdf().set(opt).from(element).save();
+                
+            } catch (err) {
+                console.error(err);
+                showModal("এরর", "রিপোর্ট ডাউনলোড করতে সমস্যা হয়েছে।", "error");
             } finally {
-                btnAction.textContent = originalBtnText;
-                btnAction.disabled = false;
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
             }
         });
-
-        // Forgot Password Logic
-        document.getElementById('btn-forgot-password').addEventListener('click', async () => {
-            const email = document.getElementById('email').value;
-            if (!email) {
-                return showModal("সতর্কতা", "পাসওয়ার্ড রিসেট করতে আগে উপরের বক্সে আপনার ইমেইলটি লিখুন এবং তারপর এই বাটনে ক্লিক করুন।", "info");
-            }
-            try {
-                await sendPasswordResetEmail(auth, email);
-                showModal("ইমেইল চেক করুন", "আপনার ইমেইলে পাসওয়ার্ড রিসেট করার লিংক পাঠানো হয়েছে।", "success");
-            } catch (error) {
-                showModal("এরর", "सঠিক ইমেইল ঠিকানা দিন বা আবার চেষ্টা করুন।", "error");
-            }
-        });
-
-        document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
 
         // ==========================================
         // 6. User Attendance Submission
@@ -857,7 +930,7 @@
                 const currentMinute = now.getMinutes();
                 // Check if outside 6 AM to 9 AM range
                 if (currentHour < 6 || currentHour > 11 || (currentHour === 11 && currentMinute > 0)) {
-                    showModal("সময় পেরিয়ে গেছে", "প্রবেশের হাজিরা কেবল প্রতিদিন সকাল ৬:০০ থেকে ১১:০০ পর্যন্ত দেওয়া যাবে।", "error");
+                    showModal("সময় পেরিয়ে গেছে", "প্রবেশের হাজিরা কেবল প্রতিদিন সকাল ৬:০০ থেকে ৯:০০ পর্যন্ত দেওয়া যাবে।", "error");
                     submitBtn.disabled = false;
                     spinner.classList.add('hidden');
                     return;
