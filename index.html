@@ -910,7 +910,7 @@
                         const distance = getDistanceFromLatLonInMeters(userLat, userLon, TARGET_LAT, TARGET_LON);
                         
                         if (distance > MAX_DISTANCE_METERS) {
-                            showModal("লোকেশন ত্রুটি", `অফিসে এসে হাজিরা দিন। (আপনার বর্তমান লোকেশন অফিস থেকে প্রায় ${Math.round(distance)} মিটার দূরে দেখাচ্ছে। ল্যাপটপের বদলে মোবাইলের GPS অন করে ট্রাই করুন)`, "error");
+                            showModal("লোকেশন ত্রুটি", `অফিসে এসে হাজিরা দিন। (আপনার বর্তমান লোকেশন অফিস থেকে প্রায় ${Math.round(distance)} মিটার দূরে দেখাচ্ছে। মোবাইলের GPS অন করে ট্রাই করুন)`, "error");
                             submitBtn.disabled = false;
                             spinner.classList.add('hidden');
                             return;
