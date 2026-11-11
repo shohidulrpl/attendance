@@ -164,6 +164,12 @@
                             </div>
                         </div>
 
+                        <!-- Today's Recorded Time Display -->
+                        <div id="today-record-display" class="hidden text-sm text-slate-800 mt-3 font-medium">
+                            <p id="entry-record-text" class="hidden">আজকে আমার প্রবেশের সময়: <span id="entry-time-val" class="font-bold text-emerald-700"></span></p>
+                            <p id="exit-record-text" class="hidden">আজকে আমার বের হওয়ার সময়: <span id="exit-time-val" class="font-bold text-red-600"></span></p>
+                        </div>
+
                         <div class="pt-2">
                             <button type="submit" id="btn-submit" class="w-full btn-gradient text-white text-base font-semibold py-3 rounded-xl flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
                                 <span>হাজিরা জমা দিন</span>
@@ -662,8 +668,17 @@
             
             unsubAttendance = onSnapshot(q, (snapshot) => {
                 let present = 0;
+                let todayEntry = null;
+                let todayExit = null;
+                const { dateStr } = updateDateDisplay();
+
                 snapshot.forEach((doc) => {
                     if (doc.data().status === 'Present') present++;
+                    // Check if there is data for today
+                    if (doc.id === dateStr) {
+                        todayEntry = doc.data().entryTime;
+                        todayExit = doc.data().exitTime;
+                    }
                 });
                 document.getElementById('stat-present').textContent = present;
                 
@@ -681,6 +696,47 @@
                 if(absent < 0) absent = 0; // Fallback
                 
                 document.getElementById('stat-absent').textContent = absent; 
+
+                // Update Today's Record Display (Entry/Exit Time)
+                const recordContainer = document.getElementById('today-record-display');
+                const entryText = document.getElementById('entry-record-text');
+                const exitText = document.getElementById('exit-record-text');
+                
+                function formatAMPM(timeStr) {
+                    if(!timeStr) return '';
+                    let [hours, minutes] = timeStr.split(':');
+                    hours = parseInt(hours);
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    hours = hours % 12;
+                    hours = hours ? hours : 12; 
+                    return `${hours.toString().padStart(2, '0')}:${minutes} ${ampm}`;
+                }
+
+                if (todayEntry || todayExit) {
+                    recordContainer.classList.remove('hidden');
+                    
+                    if (todayEntry && !todayExit) {
+                        // Show entry time only if they haven't exited yet
+                        entryText.classList.remove('hidden');
+                        document.getElementById('entry-time-val').textContent = formatAMPM(todayEntry);
+                    } else {
+                        // Reset/hide entry time when they exit
+                        entryText.classList.add('hidden');
+                    }
+
+                    if (todayExit) {
+                        // Show exit time
+                        exitText.classList.remove('hidden');
+                        document.getElementById('exit-time-val').textContent = formatAMPM(todayExit);
+                    } else {
+                        exitText.classList.add('hidden');
+                    }
+                } else {
+                    recordContainer.classList.add('hidden');
+                    entryText.classList.add('hidden');
+                    exitText.classList.add('hidden');
+                }
+
             }, (error) => {});
         }
 
