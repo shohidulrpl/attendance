@@ -818,7 +818,7 @@
                 await sendPasswordResetEmail(auth, email);
                 showModal("ইমেইল চেক করুন", "আপনার ইমেইলে পাসওয়ার্ড রিসেট করার লিংক পাঠানো হয়েছে।", "success");
             } catch (error) {
-                showModal("এরর", "सঠিক ইমেইল ঠিকানা দিন বা আবার চেষ্টা করুন।", "error");
+                showModal("এরর", "সঠিক ইমেইল ঠিকানা দিন বা আবার চেষ্টা করুন।", "error");
             }
         });
 
@@ -856,8 +856,8 @@
                 const currentHour = now.getHours();
                 const currentMinute = now.getMinutes();
                 // Check if outside 6 AM to 9 AM range
-                if (currentHour < 6 || currentHour > 9 || (currentHour === 9 && currentMinute > 0)) {
-                    showModal("সময় পেরিয়ে গেছে", "প্রবেশের হাজিরা কেবল প্রতিদিন সকাল ৬:০০ থেকে ৯:০০ পর্যন্ত দেওয়া যাবে।", "error");
+                if (currentHour < 6 || currentHour > 11 || (currentHour === 11 && currentMinute > 0)) {
+                    showModal("সময় পেরিয়ে গেছে", "প্রবেশের হাজিরা কেবল প্রতিদিন সকাল ৬:০০ থেকে ১১:০০ পর্যন্ত দেওয়া যাবে।", "error");
                     submitBtn.disabled = false;
                     spinner.classList.add('hidden');
                     return;
