@@ -818,7 +818,7 @@
                 await sendPasswordResetEmail(auth, email);
                 showModal("ইমেইল চেক করুন", "আপনার ইমেইলে পাসওয়ার্ড রিসেট করার লিংক পাঠানো হয়েছে।", "success");
             } catch (error) {
-                showModal("এরর", "সঠিক ইমেইল ঠিকানা দিন বা আবার চেষ্টা করুন।", "error");
+                showModal("এরর", "सঠিক ইমেইল ঠিকানা দিন বা আবার চেষ্টা করুন।", "error");
             }
         });
 
@@ -856,8 +856,8 @@
                 const currentHour = now.getHours();
                 const currentMinute = now.getMinutes();
                 // Check if outside 6 AM to 9 AM range
-                if (currentHour < 6 || currentHour > 11 || (currentHour === 11 && currentMinute > 0)) {
-                    showModal("সময় পেরিয়ে গেছে", "প্রবেশের হাজিরা কেবল প্রতিদিন সকাল ৬:০০ থেকে ১১:০০ পর্যন্ত দেওয়া যাবে।", "error");
+                if (currentHour < 6 || currentHour > 9 || (currentHour === 9 && currentMinute > 0)) {
+                    showModal("সময় পেরিয়ে গেছে", "প্রবেশের হাজিরা কেবল প্রতিদিন সকাল ৬:০০ থেকে ৯:০০ পর্যন্ত দেওয়া যাবে।", "error");
                     submitBtn.disabled = false;
                     spinner.classList.add('hidden');
                     return;
@@ -910,7 +910,7 @@
                         const distance = getDistanceFromLatLonInMeters(userLat, userLon, TARGET_LAT, TARGET_LON);
                         
                         if (distance > MAX_DISTANCE_METERS) {
-                            showModal("লোকেশন ত্রুটি", `অফিসে এসে হাজিরা দিন। (আপনার বর্তমান লোকেশন অফিস থেকে প্রায় ${Math.round(distance)} মিটার দূরে দেখাচ্ছে। মোবাইলের GPS অন করে ট্রাই করুন)`, "error");
+                            showModal("লোকেশন ত্রুটি", `অফিসে এসে হাজিরা দিন। (আপনার বর্তমান লোকেশন অফিস থেকে প্রায় ${Math.round(distance)} মিটার দূরে দেখাচ্ছে। ল্যাপটপের বদলে মোবাইলের GPS অন করে ট্রাই করুন)`, "error");
                             submitBtn.disabled = false;
                             spinner.classList.add('hidden');
                             return;
@@ -947,14 +947,23 @@
                         }
                     },
                     (error) => {
-                        showModal("লোকেশন পারমিশন", "হাজিরা দেওয়ার জন্য ব্রাউজারের লোকেশন (GPS) পারমিশন দিন।", "error");
+                        let errorMsg = "হাজিরা দেওয়ার জন্য লোকেশন পারমিশন দিন।";
+                        if (error.code === 1) {
+                            errorMsg = "অ্যাপে লোকেশন ব্যবহারের পারমিশন নেই। দয়া করে ফোনের Settings > Apps থেকে এই অ্যাপটিকে Location পারমিশন দিন।";
+                        } else if (error.code === 2) {
+                            errorMsg = "জিপিএস সিগন্যাল পাওয়া যাচ্ছে না। লোকেশন অফ করে আবার অন করুন।";
+                        } else if (error.code === 3) {
+                            errorMsg = "লোকেশন কানেক্ট হতে অনেক বেশি সময় লাগছে (Timeout)। আবার চেষ্টা করুন।";
+                        }
+                        
+                        showModal("লোকেশন সমস্যা", errorMsg, "error");
                         submitBtn.disabled = false;
                         spinner.classList.add('hidden');
                     },
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                    { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
                 );
             } else {
-                showModal("অসমর্থিত ব্রাউজার", "আপনার ব্রাউজারে লোকেশন ট্র্যাকিং সাপোর্ট করে না।", "error");
+                showModal("অসমর্থিত ডিভাইস", "আপনার ডিভাইসে লোকেশন ট্র্যাকিং সাপোর্ট করে না।", "error");
                 submitBtn.disabled = false;
                 spinner.classList.add('hidden');
             }
