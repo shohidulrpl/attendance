@@ -319,31 +319,33 @@
     </div>
 
     <!-- Hidden Report Template for PDF Generation -->
-    <div id="report-container" class="bg-white p-8 text-slate-800 absolute -left-[9999px] w-[800px] font-sans">
-        <div class="text-center mb-6 border-b-2 border-green-600 pb-4">
-            <h1 class="text-4xl font-bold text-green-700 mb-1">রেডিয়েন্ট ফার্মা</h1>
-            <h2 class="text-2xl font-semibold text-slate-700">মাসিক হাজিরা রিপোর্ট</h2>
-            <div class="flex justify-between items-end mt-6 text-lg font-medium">
-                <p>স্টাফের নাম: <span id="report-staff-name" class="font-bold text-xl text-emerald-700"></span></p>
-                <p>মাস: <span id="report-month" class="font-bold text-xl"></span></p>
+    <div style="width: 0; height: 0; overflow: hidden; position: absolute;">
+        <div id="report-container" class="bg-white p-8 text-slate-800 w-[800px] font-sans">
+            <div class="text-center mb-6 border-b-2 border-green-600 pb-4">
+                <h1 class="text-4xl font-bold text-green-700 mb-1">রেডিয়েন্ট ফার্মা</h1>
+                <h2 class="text-2xl font-semibold text-slate-700">মাসিক হাজিরা রিপোর্ট</h2>
+                <div class="flex justify-between items-end mt-6 text-lg font-medium">
+                    <p>স্টাফের নাম: <span id="report-staff-name" class="font-bold text-xl text-emerald-700"></span></p>
+                    <p>মাস: <span id="report-month" class="font-bold text-xl"></span></p>
+                </div>
             </div>
-        </div>
-        <table class="w-full text-left border-collapse text-sm">
-            <thead>
-                <tr class="bg-green-100 text-green-800">
-                    <th class="p-3 border border-green-200">তারিখ</th>
-                    <th class="p-3 border border-green-200">বার</th>
-                    <th class="p-3 border border-green-200">প্রবেশের সময়</th>
-                    <th class="p-3 border border-green-200">বের হওয়ার সময়</th>
-                    <th class="p-3 border border-green-200">স্ট্যাটাস</th>
-                </tr>
-            </thead>
-            <tbody id="report-table-body">
-                <!-- Rows will be injected here via JS -->
-            </tbody>
-        </table>
-        <div class="mt-8 pt-4 border-t border-slate-200 text-center text-slate-400 text-xs">
-            এই রিপোর্টটি অফিস হাজিরা অ্যাপ থেকে স্বয়ংক্রিয়ভাবে জেনারেট করা হয়েছে।
+            <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                    <tr class="bg-green-100 text-green-800">
+                        <th class="p-3 border border-green-200">তারিখ</th>
+                        <th class="p-3 border border-green-200">বার</th>
+                        <th class="p-3 border border-green-200">প্রবেশের সময়</th>
+                        <th class="p-3 border border-green-200">বের হওয়ার সময়</th>
+                        <th class="p-3 border border-green-200">স্ট্যাটাস</th>
+                    </tr>
+                </thead>
+                <tbody id="report-table-body">
+                    <!-- Rows will be injected here via JS -->
+                </tbody>
+            </table>
+            <div class="mt-8 pt-4 border-t border-slate-200 text-center text-slate-400 text-xs">
+                এই রিপোর্টটি অফিস হাজিরা অ্যাপ থেকে স্বয়ংক্রিয়ভাবে জেনারেট করা হয়েছে।
+            </div>
         </div>
     </div>
 
@@ -528,7 +530,7 @@
         });
 
         // ------------------------------------------
-        // Login & Registration Logic (This was missing)
+        // Login & Registration Logic
         // ------------------------------------------
         document.getElementById('btn-auth-action').addEventListener('click', async () => {
             const email = document.getElementById('email').value.trim();
@@ -596,7 +598,7 @@
         });
 
         // ------------------------------------------
-        // Forgot Password Logic (This was missing)
+        // Forgot Password Logic
         // ------------------------------------------
         document.getElementById('btn-forgot-password').addEventListener('click', async () => {
             const email = document.getElementById('email').value.trim();
