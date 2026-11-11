@@ -527,6 +527,96 @@
             document.getElementById('auth-error').classList.add('hidden');
         });
 
+        // ------------------------------------------
+        // Login & Registration Logic (This was missing)
+        // ------------------------------------------
+        document.getElementById('btn-auth-action').addEventListener('click', async () => {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const name = document.getElementById('fullname').value.trim();
+            const errorDiv = document.getElementById('auth-error');
+            const btn = document.getElementById('btn-auth-action');
+            const originalText = btn.textContent;
+
+            if (!email || !password) {
+                errorDiv.textContent = "দয়া করে ইমেইল এবং পাসওয়ার্ড দিন।";
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            if (!isLoginMode && !name) {
+                errorDiv.textContent = "দয়া করে আপনার নাম দিন।";
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            errorDiv.classList.add('hidden');
+            btn.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> অপেক্ষা করুন...`;
+            btn.disabled = true;
+
+            try {
+                if (isLoginMode) {
+                    // Login Process
+                    await signInWithEmailAndPassword(auth, email, password);
+                } else {
+                    // Registration Process
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+                    
+                    // Save user profile info
+                    await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'info'), {
+                        name: name,
+                        email: email,
+                        createdAt: Date.now()
+                    });
+
+                    // Add to public users list for Admin Panel
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', user.uid), {
+                        uid: user.uid,
+                        name: name,
+                        email: email
+                    });
+                }
+            } catch (error) {
+                console.error(error);
+                if (error.code === 'auth/email-already-in-use') {
+                    errorDiv.textContent = "এই ইমেইলটি ইতিমধ্যে ব্যবহৃত হচ্ছে। অন্য ইমেইল দিন অথবা লগইন করুন।";
+                } else if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                    errorDiv.textContent = "ইমেইল বা পাসওয়ার্ড ভুল হয়েছে।";
+                } else if (error.code === 'auth/weak-password') {
+                    errorDiv.textContent = "পাসওয়ার্ড অন্তত ৬ অক্ষরের হতে হবে।";
+                } else {
+                    errorDiv.textContent = "একটি ত্রুটি হয়েছে: " + error.message;
+                }
+                errorDiv.classList.remove('hidden');
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // ------------------------------------------
+        // Forgot Password Logic (This was missing)
+        // ------------------------------------------
+        document.getElementById('btn-forgot-password').addEventListener('click', async () => {
+            const email = document.getElementById('email').value.trim();
+            const errorDiv = document.getElementById('auth-error');
+            
+            if (!email) {
+                errorDiv.textContent = "পাসওয়ার্ড রিসেট করতে আগে উপরে আপনার ইমেইলটি লিখুন, তারপর বাটনে ক্লিক করুন।";
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            try {
+                await sendPasswordResetEmail(auth, email);
+                showModal("ইমেইল পাঠানো হয়েছে", "আপনার ইমেইলে পাসওয়ার্ড রিসেট লিংক পাঠানো হয়েছে। (Inbox বা Spam ফোল্ডার চেক করুন)", "success");
+            } catch (error) {
+                errorDiv.textContent = "রিসেট ইমেইল পাঠাতে সমস্যা: " + error.message;
+                errorDiv.classList.remove('hidden');
+            }
+        });
+
         async function loadUserProfile(uid) {
             try {
                 const profileRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'info');
@@ -929,7 +1019,7 @@
                 const currentHour = now.getHours();
                 const currentMinute = now.getMinutes();
                 // Check if outside 6 AM to 9 AM range
-                if (currentHour < 6 || currentHour > 11 || (currentHour === 11 && currentMinute > 0)) {
+                if (currentHour < 6 || currentHour > 12 || (currentHour === 12 && currentMinute > 0)) {
                     showModal("সময় পেরিয়ে গেছে", "প্রবেশের হাজিরা কেবল প্রতিদিন সকাল ৬:০০ থেকে ৯:০০ পর্যন্ত দেওয়া যাবে।", "error");
                     submitBtn.disabled = false;
                     spinner.classList.add('hidden');
