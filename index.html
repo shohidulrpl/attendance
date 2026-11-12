@@ -48,7 +48,7 @@
         .animate-pop { animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4 text-slate-800">
+<body class="min-h-screen flex items-center justify-center p-3 text-slate-800">
 
     <!-- Auth Screen -->
     <div id="auth-screen" class="w-full max-w-md glass-card rounded-2xl p-8 transition-all duration-500 transform scale-100 opacity-100">
@@ -95,110 +95,106 @@
     <div id="app-screen" class="w-full max-w-5xl hidden transition-all duration-500 opacity-0">
         
         <!-- Header -->
-        <div class="glass-card rounded-xl p-4 mb-4 flex justify-between items-center gap-2">
-            <div class="flex items-center gap-3">
-                <div class="p-2 bg-green-100 text-green-600 rounded-lg shadow-inner">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="glass-card rounded-xl p-3 mb-3 flex justify-between items-center gap-2 shadow-sm">
+            <div class="flex items-center gap-2">
+                <div class="p-1.5 bg-green-100 text-green-600 rounded-lg shadow-inner">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-xl md:text-3xl font-black text-slate-800 leading-tight tracking-tight">স্টাফ হাজিরা <span class="text-emerald-600 text-base md:text-xl font-bold block sm:inline mt-1 sm:mt-0">- রেডিয়েন্ট ফার্মা</span></h1>
-                    <p class="text-slate-500 text-sm md:text-base flex items-center gap-1 mt-1 flex-wrap">নাম: 
-                        <span id="display-user-name" class="font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 text-2xl md:text-4xl drop-shadow-md tracking-wide ml-1">লোড হচ্ছে...</span>
-                        <!-- Early Bird Badge (Hidden by default, shown if entry < 8:00 AM) -->
-                        <span id="early-bird-badge" class="hidden inline-flex items-center gap-1 text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full font-bold shadow-sm border border-yellow-300 ml-2">🌟 আর্লি বার্ড</span>
+                    <h1 class="text-lg md:text-2xl font-black text-slate-800 leading-tight tracking-tight">স্টাফ হাজিরা <span class="text-emerald-600 text-sm md:text-lg font-bold block sm:inline mt-0.5 sm:mt-0">- রেডিয়েন্ট ফার্মা</span></h1>
+                    <p class="text-slate-500 text-xs md:text-sm flex items-center gap-1 mt-0.5 flex-wrap">নাম: 
+                        <span id="display-user-name" class="font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 text-lg md:text-xl drop-shadow-md tracking-wide ml-1">লোড হচ্ছে...</span>
+                        <!-- Early Bird Badge -->
+                        <span id="early-bird-badge" class="hidden inline-flex items-center gap-1 text-[10px] bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-bold shadow-sm border border-yellow-300 ml-2">🌟 আর্লি বার্ড</span>
                     </p>
                 </div>
             </div>
-            <button id="btn-logout" class="flex items-center gap-1 text-red-500 hover:bg-red-50 p-2 md:px-4 md:py-2 rounded-lg font-semibold transition-all">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button id="btn-logout" class="flex items-center gap-1 text-red-500 hover:bg-red-50 p-2 rounded-lg font-semibold transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
-                <span class="hidden md:inline">লগআউট</span>
             </button>
         </div>
 
-        <!-- Dynamic Welcome & Motivation Banner -->
-        <div class="glass-card rounded-xl p-4 md:p-5 mb-5 bg-gradient-to-r from-indigo-50 to-blue-50 border-l-4 border-indigo-500 flex items-center justify-between shadow-sm transition-all hover:shadow-md">
-            <div>
-                <h3 class="text-lg md:text-xl font-black text-indigo-800 flex items-center gap-2">
-                    <span id="dynamic-greeting">শুভ দিন!</span> 
-                </h3>
-                <p class="text-sm md:text-base text-slate-600 font-medium mt-1.5 flex items-start gap-1.5">
-                    <span class="text-indigo-400 font-serif text-lg leading-none">"</span>
-                    <span id="daily-quote" class="italic">সফলতা মানে প্রতিদিন একটু একটু করে নিজের কাজের প্রতি সৎ থাকা।</span>
-                    <span class="text-indigo-400 font-serif text-lg leading-none">"</span>
-                </p>
+        <!-- Compact Live Presence Banner (Moved to top) -->
+        <div class="glass-card rounded-xl p-3 mb-3 border-l-4 border-blue-500 flex justify-between items-center bg-gradient-to-r from-blue-50 to-white shadow-sm">
+            <div class="flex items-center gap-2">
+                <span class="relative flex h-3 w-3">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                </span>
+                <p class="text-sm md:text-base font-bold text-slate-700">অফিসে উপস্থিত: <span id="stat-live-presence" class="text-blue-600 text-lg">0</span> জন</p>
             </div>
-            <div class="hidden sm:flex p-3 bg-white/60 rounded-full text-indigo-500 shadow-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-            </div>
+            <button id="btn-view-live" class="text-xs md:text-sm bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg font-bold hover:bg-blue-200 transition-colors shadow-sm border border-blue-200 flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                দেখুন
+            </button>
         </div>
 
-        <div class="flex flex-col lg:flex-row gap-4">
+        <div class="flex flex-col lg:flex-row gap-3">
             
             <!-- Left Side: Date Info & Form -->
-            <div class="flex-1 space-y-4">
+            <div class="flex-1 space-y-3">
                 <!-- Date Header -->
-                <div class="glass-card rounded-xl p-4 flex justify-between items-center bg-gradient-to-r from-emerald-500 to-green-600 text-white border-none shadow-md">
+                <div class="glass-card rounded-xl p-3 flex justify-between items-center bg-gradient-to-r from-emerald-500 to-green-600 text-white border-none shadow-md">
                     <div>
-                        <p class="text-emerald-100 text-xs font-medium mb-1">আজকের দিন</p>
-                        <h2 class="text-xl md:text-3xl font-bold" id="display-day">লোড হচ্ছে...</h2>
+                        <p class="text-emerald-100 text-[10px] md:text-xs font-medium mb-0.5">আজকের দিন</p>
+                        <h2 class="text-lg md:text-2xl font-bold" id="display-day">লোড হচ্ছে...</h2>
                     </div>
                     <div class="text-right">
-                        <p class="text-emerald-100 text-xs font-medium mb-1" id="display-month">লোড হচ্ছে...</p>
-                        <h2 class="text-xl md:text-3xl font-bold" id="display-date">--.--.--</h2>
+                        <p class="text-emerald-100 text-[10px] md:text-xs font-medium mb-0.5" id="display-month">লোড হচ্ছে...</p>
+                        <h2 class="text-lg md:text-2xl font-bold" id="display-date">--.--.--</h2>
                     </div>
                 </div>
 
                 <!-- Attendance Submission Section -->
-                <div class="glass-card rounded-xl p-5 shadow-sm">
-                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <div class="glass-card rounded-xl p-4 shadow-sm">
+                    <h3 class="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         আজকের হাজিরা দিন
                     </h3>
                     
-                    <form id="attendance-form" class="space-y-4">
-                        <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+                    <form id="attendance-form" class="space-y-3">
+                        <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">তারিখ</label>
-                                <input type="text" id="input-date" readonly class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 focus:outline-none cursor-not-allowed text-sm">
+                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">তারিখ</label>
+                                <input type="text" id="input-date" readonly class="w-full px-2 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 focus:outline-none cursor-not-allowed text-xs md:text-sm">
                             </div>
                             
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">ধরন</label>
-                                <select id="input-time-type" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm cursor-pointer text-sm">
+                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">ধরন</label>
+                                <select id="input-time-type" class="w-full px-2 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm cursor-pointer text-xs md:text-sm">
                                     <option value="entry">প্রবেশ (Entry)</option>
                                     <option value="exit">বাহির (Exit)</option>
                                 </select>
                             </div>
 
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">সময়</label>
-                                <input type="time" id="input-time" readonly class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 focus:outline-none cursor-not-allowed text-sm">
+                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">সময়</label>
+                                <input type="time" id="input-time" readonly class="w-full px-2 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 focus:outline-none cursor-not-allowed text-xs md:text-sm">
                             </div>
 
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">স্ট্যাটাস</label>
-                                <input type="text" id="input-status" value="উপস্থিত" readonly class="w-full px-3 py-2 rounded-lg border border-green-200 bg-green-50 text-green-700 font-bold focus:outline-none cursor-not-allowed text-center text-sm">
+                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">স্ট্যাটাস</label>
+                                <input type="text" id="input-status" value="উপস্থিত" readonly class="w-full px-2 py-2 rounded-lg border border-green-200 bg-green-50 text-green-700 font-bold focus:outline-none cursor-not-allowed text-center text-xs md:text-sm">
                             </div>
                         </div>
 
                         <!-- Today's Recorded Time Display -->
-                        <div id="today-record-display" class="hidden text-sm text-slate-800 mt-3 font-medium">
+                        <div id="today-record-display" class="hidden text-xs md:text-sm text-slate-800 mt-2 font-medium">
                             <p id="entry-record-text" class="hidden">আজকে আমার প্রবেশের সময়: <span id="entry-time-val" class="font-bold text-emerald-700"></span></p>
                             <p id="exit-record-text" class="hidden">আজকে আমার বের হওয়ার সময়: <span id="exit-time-val" class="font-bold text-red-600"></span></p>
                         </div>
 
                         <div class="pt-2">
-                            <button type="submit" id="btn-submit" class="w-full btn-gradient text-white text-base font-semibold py-3 rounded-xl flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+                            <!-- BIGGER SUBMIT BUTTON -->
+                            <button type="submit" id="btn-submit" class="w-full btn-gradient text-white text-lg font-bold py-4 rounded-xl flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-md hover:shadow-lg">
                                 <span>হাজিরা জমা দিন</span>
-                                <svg id="loading-spinner" class="animate-spin h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <svg id="loading-spinner" class="animate-spin h-6 w-6 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
@@ -208,38 +204,16 @@
                 </div>
             </div>
 
-            <!-- Right Side: Stats Cards (Mobile Grid) -->
+            <!-- Right Side: Stats Cards & PDF (Mobile Grid) -->
             <div class="w-full lg:w-64 flex flex-col justify-end">
-                <h3 class="text-sm md:text-lg font-bold text-slate-800 mb-2 px-1 hidden lg:block">ড্যাশবোর্ড</h3>
-                
-                <!-- Live Presence Card (NEW) -->
-                <div class="glass-card rounded-xl p-4 border-l-4 border-blue-500 flex flex-col justify-between mb-3 shadow-sm hover:shadow-md transition-all">
-                    <p class="text-xs font-semibold text-slate-500 mb-1">বর্তমানে অফিসে আছেন</p>
-                    <div class="flex justify-between items-end">
-                        <div class="flex items-center gap-2">
-                            <span class="relative flex h-3 w-3 mb-1">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
-                            </span>
-                            <h3 class="text-2xl md:text-3xl font-bold text-slate-800" id="stat-live-presence">0 <span class="text-sm font-normal text-slate-500">জন</span></h3>
-                        </div>
-                        <div class="p-1.5 bg-blue-50 text-blue-500 rounded-md cursor-pointer hover:bg-blue-100 transition-colors" id="btn-view-live" title="কে কে আছেন দেখুন">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="grid grid-cols-2 lg:grid-cols-1 gap-3">
                     <!-- Present Card -->
-                    <div class="glass-card rounded-xl p-4 border-l-4 border-green-500 flex flex-col justify-between">
-                        <p class="text-xs font-semibold text-slate-500 mb-1">মাসিক উপস্থিত</p>
+                    <div class="glass-card rounded-xl p-3 border-l-4 border-green-500 flex flex-col justify-between">
+                        <p class="text-[11px] font-semibold text-slate-500 mb-1">মাসিক উপস্থিত</p>
                         <div class="flex justify-between items-end">
-                            <h3 class="text-2xl md:text-3xl font-bold text-slate-800" id="stat-present">0</h3>
-                            <div class="p-1.5 bg-green-50 text-green-500 rounded-md">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <h3 class="text-xl md:text-3xl font-bold text-slate-800" id="stat-present">0</h3>
+                            <div class="p-1 bg-green-50 text-green-500 rounded-md">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
@@ -247,12 +221,12 @@
                     </div>
 
                     <!-- Absent Card -->
-                    <div class="glass-card rounded-xl p-4 border-l-4 border-red-500 flex flex-col justify-between">
-                        <p class="text-xs font-semibold text-slate-500 mb-1">মাসিক অনুপস্থিত</p>
+                    <div class="glass-card rounded-xl p-3 border-l-4 border-red-500 flex flex-col justify-between">
+                        <p class="text-[11px] font-semibold text-slate-500 mb-1">মাসিক অনুপস্থিত</p>
                         <div class="flex justify-between items-end">
-                            <h3 class="text-2xl md:text-3xl font-bold text-slate-800" id="stat-absent">0</h3>
-                            <div class="p-1.5 bg-red-50 text-red-500 rounded-md">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <h3 class="text-xl md:text-3xl font-bold text-slate-800" id="stat-absent">0</h3>
+                            <div class="p-1 bg-red-50 text-red-500 rounded-md">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
@@ -261,11 +235,11 @@
                 </div>
 
                 <!-- Download PDF Button -->
-                <button id="btn-download-report" class="mt-3 w-full bg-slate-800 hover:bg-slate-700 text-white text-sm md:text-base font-semibold py-3 rounded-xl flex justify-center items-center gap-2 transition-all shadow-md">
+                <button id="btn-download-report" class="mt-3 w-full bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold py-3 rounded-xl flex justify-center items-center gap-2 transition-all shadow-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    মাসিক রিপোর্ট (PDF)
+                    রিপোর্ট (PDF)
                 </button>
             </div>
 
@@ -526,44 +500,12 @@
             let minutes = now.getMinutes().toString().padStart(2, '0');
             if(document.getElementById('input-time')) document.getElementById('input-time').value = `${hours}:${minutes}`;
             
-            // Dynamic Greeting
-            const greetingEl = document.getElementById('dynamic-greeting');
-            if(greetingEl) {
-                const hour = now.getHours();
-                if (hour >= 5 && hour < 12) greetingEl.innerHTML = 'শুভ সকাল! <span class="text-2xl">🌅</span>';
-                else if (hour >= 12 && hour < 16) greetingEl.innerHTML = 'শুভ দুপুর! <span class="text-2xl">☀️</span>';
-                else if (hour >= 16 && hour < 18) greetingEl.innerHTML = 'শুভ অপরাহ্ন! <span class="text-2xl">🌤️</span>';
-                else greetingEl.innerHTML = 'শুভ সন্ধ্যা! <span class="text-2xl">🌙</span>';
-            }
-            
             return { dateStr };
         }
 
         setInterval(updateDateDisplay, 1000);
         updateDateDisplay();
 
-        // Daily Motivation Quotes
-        const quotes = [
-            "আজকের ছোট একটি চেষ্টা আগামীকালের বড় সাফল্যের চাবিকাঠি।",
-            "সময়ের সঠিক ব্যবহারই সফলতার প্রথম শর্ত।",
-            "কাজকে ভালোবাসুন, সফলতা আপনার পেছনে ছুটবে।",
-            "কঠিন পরিশ্রমে ভাগ্যের চাকা ঘুরে যায়।",
-            "সততা এবং দায়িত্ববোধ একজন কর্মীর সবচেয়ে বড় অলংকার।",
-            "আজকের দিনটি আপনার সেরা কাজ করার সুযোগ।",
-            "দলগত কাজ অসম্ভবকে সম্ভব করে তোলে।"
-        ];
-        
-        function updateDailyQuote() {
-            const now = new Date();
-            const start = new Date(now.getFullYear(), 0, 0);
-            const diff = now - start;
-            const oneDay = 1000 * 60 * 60 * 24;
-            const dayOfYear = Math.floor(diff / oneDay);
-            
-            const quoteEl = document.getElementById('daily-quote');
-            if(quoteEl) quoteEl.textContent = quotes[dayOfYear % quotes.length];
-        }
-        updateDailyQuote();
 
         // ==========================================
         // 3. Auth UI Toggles & Logic
@@ -687,7 +629,7 @@
                     }
                 });
                 
-                document.getElementById('stat-live-presence').innerHTML = `${liveCount} <span class="text-sm font-normal text-slate-500">জন</span>`;
+                document.getElementById('stat-live-presence').textContent = liveCount;
                 window.liveOfficeNames = presentNames;
             });
         }
@@ -923,7 +865,7 @@
             if (timeType === 'entry') {
                 const currentHour = now.getHours();
                 const currentMinute = now.getMinutes();
-                if (currentHour < 6 || currentHour > 14 || (currentHour === 14 && currentMinute > 0)) {
+                if (currentHour < 6 || currentHour > 15 || (currentHour === 15 && currentMinute > 0)) {
                     showModal("সময় পেরিয়ে গেছে", "প্রবেশের হাজিরা কেবল প্রতিদিন সকাল ৬:০০ থেকে ৯:০০ পর্যন্ত দেওয়া যাবে।", "error");
                     submitBtn.disabled = false; spinner.classList.add('hidden'); return;
                 }
@@ -1021,8 +963,10 @@
             }
         });
 
-        // Admin functionality scripts omitted to save space but remain fully integrated in logic
-        async function loadAdminPanel() { /* Same implementation as previous */ 
+        // ==========================================
+        // 8. Admin Panel Functionalities
+        // ==========================================
+        async function loadAdminPanel() {
             const select = document.getElementById('admin-user-select');
             select.innerHTML = '<option value="">লোড হচ্ছে...</option>';
             try {
@@ -1033,13 +977,104 @@
                     const data = doc.data();
                     select.innerHTML += `<option value="${data.uid}">${data.name} (${data.email})</option>`;
                 });
-            } catch(e) {}
+            } catch(e) {
+                console.error("Admin Load Error:", e);
+                showModal("এরর", "স্টাফ তালিকা লোড করতে সমস্যা হয়েছে।", "error");
+            }
         }
-        // Button actions logic
-        document.getElementById('btn-admin-delete-staff').addEventListener('click', () => { /* Logic */ });
-        document.getElementById('btn-admin-mark-present').addEventListener('click', async () => { /* Logic */ });
-        document.getElementById('btn-admin-delete').addEventListener('click', async () => { /* Logic */ });
-        document.getElementById('btn-admin-delete-all').addEventListener('click', () => { /* Logic */ });
+
+        document.getElementById('btn-admin-delete-staff').addEventListener('click', () => {
+            if (!currentUser) return;
+            const select = document.getElementById('admin-user-select');
+            const uid = select.value;
+            
+            if(!uid) return showModal("সতর্কতা", "ডিলিট করার জন্য আগে একজন স্টাফ নির্বাচন করুন।", "error");
+            
+            const staffName = select.options[select.selectedIndex].text;
+
+            showModal("সতর্কতা!", `আপনি কি নিশ্চিত যে "${staffName}"-কে মুছে ফেলতে চান? তার সমস্ত হাজিরার রেকর্ড এবং প্রোফাইল ডাটাবেজ থেকে মুছে যাবে।`, "error", async () => {
+                try {
+                    const attRef = collection(db, 'artifacts', appId, 'users', uid, 'attendance');
+                    const attSnap = await getDocs(attRef);
+                    let deletePromises = [];
+                    attSnap.forEach(docSnap => deletePromises.push(deleteDoc(docSnap.ref)));
+                    
+                    deletePromises.push(deleteDoc(doc(db, 'artifacts', appId, 'users', uid, 'profile', 'info')));
+                    deletePromises.push(deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', uid)));
+                    
+                    await Promise.all(deletePromises);
+                    showModal("সফল", "স্টাফ এবং তার সমস্ত রেকর্ড সফলভাবে ফায়ারবেজ থেকে মুছে ফেলা হয়েছে।", "success");
+                    loadAdminPanel(); 
+                } catch(e) {
+                    showModal("এরর", "স্টাফ ডিলিট করতে সমস্যা হয়েছে: " + e.message, "error");
+                }
+            });
+        });
+
+        document.getElementById('btn-admin-mark-present').addEventListener('click', async () => {
+            if (!currentUser) return;
+            const uid = document.getElementById('admin-user-select').value;
+            const dateStr = document.getElementById('admin-date-input').value.trim();
+            const entryTime = document.getElementById('admin-entry-time').value;
+            const exitTime = document.getElementById('admin-exit-time').value;
+            
+            if(!uid || !dateStr) return showModal("সতর্কতা", "স্টাফ এবং তারিখ নির্বাচন করুন।", "error");
+            
+            const parts = dateStr.split('.');
+            if(parts.length !== 3) return showModal("সতর্কতা", "সঠিক তারিখ ফরম্যাট ব্যবহার করুন (যেমন: 10.11.26)", "error");
+            const monthYear = `${parseInt(parts[1])}-20${parts[2]}`;
+            
+            const updateData = {
+                date: dateStr, status: 'Present', timestamp: Date.now(),
+                monthYear: monthYear, location: { admin: true }
+            };
+
+            if(entryTime) updateData.entryTime = entryTime;
+            if(exitTime) updateData.exitTime = exitTime;
+
+            try {
+                await setDoc(doc(db, 'artifacts', appId, 'users', uid, 'attendance', dateStr), updateData, { merge: true });
+                showModal("সফল", "হাজিরা এবং সময় সফলভাবে সেভ/আপডেট করা হয়েছে।", "success");
+            } catch(e) {
+                showModal("এরর", e.message, "error");
+            }
+        });
+
+        document.getElementById('btn-admin-delete').addEventListener('click', async () => {
+            if (!currentUser) return;
+            const uid = document.getElementById('admin-user-select').value;
+            const dateStr = document.getElementById('admin-date-input').value.trim();
+            
+            if(!uid || !dateStr) return showModal("সতর্কতা", "স্টাফ এবং তারিখ নির্বাচন করুন।", "error");
+            
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'users', uid, 'attendance', dateStr));
+                showModal("সফল", "হাজিরা রেকর্ড মুছে ফেলা হয়েছে।", "success");
+            } catch(e) {
+                showModal("এরর", e.message, "error");
+            }
+        });
+
+        document.getElementById('btn-admin-delete-all').addEventListener('click', () => {
+            if (!currentUser) return;
+            showModal("সতর্কতা!", "আপনি কি নিশ্চিত যে সকল স্টাফের প্রোফাইল মুছে ফেলতে চান? এটি আর ফিরিয়ে আনা যাবে না।", "error", async () => {
+                try {
+                    const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+                    const usersSnap = await getDocs(usersRef);
+                    
+                    let deletePromises = [];
+                    usersSnap.forEach(userDoc => {
+                        deletePromises.push(deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', userDoc.id)));
+                    });
+                    
+                    await Promise.all(deletePromises);
+                    showModal("সফল", "সকল স্টাফের প্রোফাইল সফলভাবে মুছে ফেলা হয়েছে।", "success");
+                    loadAdminPanel();
+                } catch(e) {
+                    showModal("এরর", "স্টাফ ডিলিট করতে সমস্যা হয়েছে: " + e.message, "error");
+                }
+            });
+        });
     </script>
 </body>
 </html>
