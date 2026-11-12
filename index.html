@@ -1018,7 +1018,7 @@
                 const currentHour = now.getHours();
                 const currentMinute = now.getMinutes();
                 // Check if outside 6 AM to 9 AM range
-                if (currentHour < 6 || currentHour > 11 || (currentHour === 11 && currentMinute > 0)) {
+                if (currentHour < 6 || currentHour > 12 || (currentHour === 12 && currentMinute > 0)) {
                     showModal("সময় পেরিয়ে গেছে", "প্রবেশের হাজিরা কেবল প্রতিদিন সকাল ৬:০০ থেকে ৯:০০ পর্যন্ত দেওয়া যাবে।", "error");
                     submitBtn.disabled = false;
                     spinner.classList.add('hidden');
@@ -1119,12 +1119,19 @@
 
                             const n8nWebhookUrl = "https://rpl2.app.n8n.cloud/webhook/attendance"; 
                             
-                            // Send POST request to n8n silently in the background
-                            fetch(n8nWebhookUrl, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(webhookData)
-                            }).catch(err => console.log("Webhook Error:", err)); // We don't block the UI if webhook fails
+                            // Send POST request to n8n silently and wait for it to complete
+                            try {
+                                await fetch(n8nWebhookUrl, {
+                                    method: 'POST',
+                                    headers: { 
+                                        'Accept': 'application/json',
+                                        'Content-Type': 'application/json' 
+                                    },
+                                    body: JSON.stringify(webhookData)
+                                });
+                            } catch (webhookError) {
+                                console.log("Webhook Error:", webhookError);
+                            }
                             // ==========================================
                             
                             showModal("অসাধারণ! 🎉", `আপনার আজকের ${typeMsg} সফলভাবে জমা হয়েছে।`, "success");
