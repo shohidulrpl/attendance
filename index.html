@@ -619,20 +619,19 @@
             unsubLivePresence = onSnapshot(activeRef, (snapshot) => {
                 let liveCount = 0;
                 const { dateStr } = updateDateDisplay();
-                let presentNames = [];
+                let presentUsers = [];
                 
                 snapshot.forEach(docSnap => {
                     const data = docSnap.data();
                     if(data.date === dateStr) {
                         liveCount++;
-                        presentNames.push(data.name);
+                        // Save both name and entry time for sorting
+                        presentUsers.push({
+                            name: data.name,
+                            entryTime: data.entryTime || "23:59" // fallback if time is missing
+                        });
                     }
                 });
-                
-                document.getElementById('stat-live-presence').textContent = liveCount;
-                window.liveOfficeNames = presentNames;
-            });
-        }
         
         // Show names in modal when Eye Icon clicked
         document.getElementById('btn-view-live').addEventListener('click', () => {
@@ -865,7 +864,7 @@
             if (timeType === 'entry') {
                 const currentHour = now.getHours();
                 const currentMinute = now.getMinutes();
-                if (currentHour < 6 || currentHour > 15 || (currentHour === 15 && currentMinute > 0)) {
+                if (currentHour < 6 || currentHour > 10 || (currentHour === 10 && currentMinute > 0)) {
                     showModal("সময় পেরিয়ে গেছে", "প্রবেশের হাজিরা কেবল প্রতিদিন সকাল ৬:০০ থেকে ৯:০০ পর্যন্ত দেওয়া যাবে।", "error");
                     submitBtn.disabled = false; spinner.classList.add('hidden'); return;
                 }
