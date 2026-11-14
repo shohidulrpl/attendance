@@ -632,12 +632,31 @@
                         });
                     }
                 });
+                
+                // Sort users by entry time (earliest first)
+                presentUsers.sort((a, b) => a.entryTime.localeCompare(b.entryTime));
+                
+                document.getElementById('stat-live-presence').textContent = liveCount;
+                window.liveOfficeNames = presentUsers;
+            });
+        }
         
         // Show names in modal when Eye Icon clicked
         document.getElementById('btn-view-live').addEventListener('click', () => {
-            if (window.liveOfficeNames.length > 0) {
-                // Join names with bullet points
-                const namesList = window.liveOfficeNames.map(n => `• ${n}`).join('\n');
+            if (window.liveOfficeNames && window.liveOfficeNames.length > 0) {
+                const namesList = window.liveOfficeNames.map((user, index) => {
+                    // নামের পাশে প্রবেশের সময় দেখানোর জন্য
+                    let timeDisplay = '';
+                    if (user.entryTime !== "23:59") {
+                        timeDisplay = ` (${formatAMPM(user.entryTime)})`;
+                    }
+                    
+                    // প্রথম জনের নামের পাশে 🥇 1st ব্যাজ
+                    if (index === 0) {
+                        return `• ${user.name}${timeDisplay} 🥇 1st`;
+                    }
+                    return `• ${user.name}${timeDisplay}`;
+                }).join('\n');
                 showModal("অফিসে উপস্থিত", namesList, "info");
             } else {
                 showModal("অফিসে উপস্থিত", "বর্তমানে কেউ অফিসে উপস্থিত নেই।", "info");
@@ -864,7 +883,7 @@
             if (timeType === 'entry') {
                 const currentHour = now.getHours();
                 const currentMinute = now.getMinutes();
-                if (currentHour < 6 || currentHour > 10 || (currentHour === 10 && currentMinute > 0)) {
+                if (currentHour < 6 || currentHour > 11 || (currentHour === 11 && currentMinute > 0)) {
                     showModal("সময় পেরিয়ে গেছে", "প্রবেশের হাজিরা কেবল প্রতিদিন সকাল ৬:০০ থেকে ৯:০০ পর্যন্ত দেওয়া যাবে।", "error");
                     submitBtn.disabled = false; spinner.classList.add('hidden'); return;
                 }
