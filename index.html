@@ -883,7 +883,7 @@
             if (timeType === 'entry') {
                 const currentHour = now.getHours();
                 const currentMinute = now.getMinutes();
-                if (currentHour < 6 || currentHour > 11 || (currentHour === 11 && currentMinute > 0)) {
+                if (currentHour < 6 || currentHour > 15 || (currentHour === 15 && currentMinute > 0)) {
                     showModal("সময় পেরিয়ে গেছে", "প্রবেশের হাজিরা কেবল প্রতিদিন সকাল ৬:০০ থেকে ৯:০০ পর্যন্ত দেওয়া যাবে।", "error");
                     submitBtn.disabled = false; spinner.classList.add('hidden'); return;
                 }
