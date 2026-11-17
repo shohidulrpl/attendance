@@ -772,47 +772,26 @@
                 if (todayEntry || todayExit) {
                     recordContainer.classList.remove('hidden');
                     if (todayEntry && !todayExit) {
-                        // Show entry time
                         entryText.classList.remove('hidden');
                         document.getElementById('entry-time-val').textContent = formatAMPM(todayEntry);
                         
-                        // NEW: Work Duration Timer (Live per second)
-                        const durationElText = document.getElementById('work-duration-text');
-                        const durationElVal = document.getElementById('work-duration-val');
-                        durationElText.classList.remove('hidden');
-                        
-                        const updateDuration = () => {
-                            const [eHr, eMin] = todayEntry.split(':').map(Number);
-                            const now = new Date();
-                            
-                            // Calculate exact milliseconds difference
-                            const entryDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), eHr, eMin, 0);
-                            let diffMs = now.getTime() - entryDate.getTime();
-                            if (diffMs < 0) diffMs = 0;
-                            
-                            const hrs = Math.floor(diffMs / (1000 * 60 * 60));
-                            const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-                            const secs = Math.floor((diffMs % (1000 * 60)) / 1000);
-                            
-                            // Format: X ঘণ্টা Y মিনিট Z সেকেন্ড
-                            let timeStr = "";
-                            if (hrs > 0) timeStr += `${hrs} ঘণ্টা `;
-                            timeStr += `${mins.toString().padStart(2, '0')} মিনিট `;
-                            timeStr += `${secs.toString().padStart(2, '0')} সেকেন্ড`;
-                            
-                            durationElVal.textContent = timeStr;
-                        };
-                        
-                        updateDuration();
-                        if(window.workTimer) clearInterval(window.workTimer);
-                        window.workTimer = setInterval(updateDuration, 1000); // প্রতি ১ সেকেন্ডে আপডেট হবে!
-
+                        // NEW: Show and Start Live Timer
+                        liveTimerText.classList.remove('hidden');
+                        startOfficeTimer(todayEntry);
                     } else {
-                        // Reset/hide entry time when they exit
                         entryText.classList.add('hidden');
-                        document.getElementById('work-duration-text').classList.add('hidden');
-                        if(window.workTimer) clearInterval(window.workTimer);
+                        liveTimerText.classList.add('hidden');
+                        if (officeTimerInterval) clearInterval(officeTimerInterval);
                     }
+
+                    if (todayExit) {
+                        exitText.classList.remove('hidden');
+                        document.getElementById('exit-time-val').textContent = formatAMPM(todayExit);
+                    } else exitText.classList.add('hidden');
+                } else {
+                    recordContainer.classList.add('hidden');
+                    entryText.classList.add('hidden'); exitText.classList.add('hidden');
+                }
             });
         }
 
