@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Add html2pdf library for PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <!-- Beautiful Bengali Font -->
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -187,6 +188,7 @@
                         <!-- Today's Recorded Time Display -->
                         <div id="today-record-display" class="hidden text-xs md:text-sm text-slate-800 mt-2 font-medium">
                             <p id="entry-record-text" class="hidden">আজকে আমার প্রবেশের সময়: <span id="entry-time-val" class="font-bold text-emerald-700"></span></p>
+                            <p id="work-duration-text" class="hidden text-xs mt-1 text-blue-600 font-semibold bg-blue-50 px-2 py-1 rounded-md inline-block">অফিসে আছেন: <span id="work-duration-val" class="font-bold text-blue-700">--</span></p>
                             <p id="exit-record-text" class="hidden">আজকে আমার বের হওয়ার সময়: <span id="exit-time-val" class="font-bold text-red-600"></span></p>
                         </div>
 
@@ -738,17 +740,34 @@
                 if (todayEntry || todayExit) {
                     recordContainer.classList.remove('hidden');
                     if (todayEntry && !todayExit) {
+                        // Show entry time
                         entryText.classList.remove('hidden');
                         document.getElementById('entry-time-val').textContent = formatAMPM(todayEntry);
-                    } else entryText.classList.add('hidden');
+                        
+                        // NEW: Work Duration Timer
+                        const durationElText = document.getElementById('work-duration-text');
+                        const durationElVal = document.getElementById('work-duration-val');
+                        durationElText.classList.remove('hidden');
+                        
+                        const updateDuration = () => {
+                            const [eHr, eMin] = todayEntry.split(':').map(Number);
+                            const now = new Date();
+                            let diffMins = (now.getHours() * 60 + now.getMinutes()) - (eHr * 60 + eMin);
+                            if (diffMins < 0) diffMins = 0;
+                            const hrs = Math.floor(diffMins / 60);
+                            const mins = diffMins % 60;
+                            durationElVal.textContent = (hrs > 0 ? `${hrs} ঘণ্টা ` : '') + `${mins} মিনিট`;
+                        };
+                        updateDuration();
+                        if(window.workTimer) clearInterval(window.workTimer);
+                        window.workTimer = setInterval(updateDuration, 60000); // Update every minute
 
-                    if (todayExit) {
-                        exitText.classList.remove('hidden');
-                        document.getElementById('exit-time-val').textContent = formatAMPM(todayExit);
-                    } else exitText.classList.add('hidden');
-                } else {
-                    recordContainer.classList.add('hidden');
-                    entryText.classList.add('hidden'); exitText.classList.add('hidden');
+                    } else {
+                        // Reset/hide entry time when they exit
+                        entryText.classList.add('hidden');
+                        document.getElementById('work-duration-text').classList.add('hidden');
+                        if(window.workTimer) clearInterval(window.workTimer);
+                    }
                 }
             });
         }
@@ -963,6 +982,8 @@
                             } catch (webhookError) {}
                             
                             showModal("অসাধারণ! 🎉", `আপনার আজকের ${typeMsg} সফলভাবে জমা হয়েছে।`, "success");
+                            // Confetti Animation
+confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#10b981', '#3b82f6', '#f59e0b'] });
                         } catch (err) {
                             showModal("সেভ এরর", err.message, "error");
                         } finally {
