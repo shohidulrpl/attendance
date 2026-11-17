@@ -417,7 +417,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, query, where, getDocs, deleteDoc, collectionGroup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ==========================================
         // 1. Firebase Configuration & Initialization
@@ -441,15 +441,15 @@
 
         let currentUser = null;
         let unsubAttendance = null;
-        let unsubPresence = null;
-        let isLoginMode = true; // Track auth UI state
-        let userProfilesCache = {}; // Cache for user names
+        let presenceUnsubs = []; // FIXED: Array to hold multiple real-time listeners safely
+        let isLoginMode = true;
+        let userProfilesCache = {};
 
-        // Constants for Location (Your Office Location)
+        // Constants for Location
         const TARGET_LAT = 22.3593062;
         const TARGET_LON = 91.8129604;
-        const MAX_DISTANCE_METERS = 500; // Allowed radius in meters
-        const ADMIN_EMAIL = 'admin@office.com'; // Special email to trigger Admin Panel
+        const MAX_DISTANCE_METERS = 500;
+        const ADMIN_EMAIL = 'admin@office.com'; 
 
         // ==========================================
         // 2. UI Elements & Utilities
@@ -458,7 +458,6 @@
         const appScreen = document.getElementById('app-screen');
         const adminScreen = document.getElementById('admin-screen');
         
-        // Modal functions
         const modal = document.getElementById('custom-modal');
         const modalTitle = document.getElementById('modal-title');
         const modalMessage = document.getElementById('modal-message');
@@ -477,7 +476,6 @@
                 btnCancel.classList.add('hidden');
             }
             
-            // Reset Animation
             modalIcon.classList.remove('animate-pop');
             void modalIcon.offsetWidth; 
             modalIcon.classList.add('animate-pop');
@@ -492,7 +490,6 @@
                 modalIcon.className = 'h-8 w-8 rounded-full flex items-center justify-center bg-blue-100 text-blue-500 mx-auto animate-pop';
                 modalIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
             }
-
             modal.classList.remove('hidden');
         }
 
@@ -506,7 +503,6 @@
             confirmCallback = null;
         });
 
-        // Presence Modal
         document.getElementById('btn-view-presence').addEventListener('click', () => {
             document.getElementById('presence-modal').classList.remove('hidden');
         });
@@ -514,20 +510,17 @@
             document.getElementById('presence-modal').classList.add('hidden');
         });
 
-        // Calculate distance between two coordinates
         function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
             const R = 6371e3;
             const φ1 = lat1 * Math.PI/180;
             const φ2 = lat2 * Math.PI/180;
             const Δφ = (lat2-lat1) * Math.PI/180;
             const Δλ = (lon2-lon1) * Math.PI/180;
-
             const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
             return R * c; 
         }
 
-        // Bengali Date and Time Display Utilities
         function updateDateDisplay() {
             const now = new Date();
             const monthsBn = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
@@ -538,7 +531,6 @@
                 document.getElementById('display-day').textContent = daysBn[now.getDay()];
             }
             
-            // Format: DD.MM.YY
             const dateStr = `${now.getDate().toString().padStart(2, '0')}.${(now.getMonth() + 1).toString().padStart(2, '0')}.${now.getFullYear().toString().slice(-2)}`;
             if(document.getElementById('display-date')) document.getElementById('display-date').textContent = dateStr;
             if(document.getElementById('input-date')) document.getElementById('input-date').value = dateStr;
@@ -550,10 +542,9 @@
             return { dateStr };
         }
 
-        setInterval(updateDateDisplay, 1000); // Update time every second
+        setInterval(updateDateDisplay, 1000);
         updateDateDisplay();
 
-        // Shared utility to format time to AM/PM
         function formatAMPM(timeStr) {
             if(!timeStr) return '';
             let [hours, minutes] = timeStr.split(':');
@@ -564,7 +555,6 @@
             return `${hours.toString().padStart(2, '0')}:${minutes} ${ampm}`;
         }
 
-        // Helper function to fetch user names
         async function getUserName(uid) {
             if(userProfilesCache[uid]) return userProfilesCache[uid];
             try {
@@ -578,9 +568,8 @@
         }
 
         // ==========================================
-        // 3. Auth UI Toggles & Profile Fetch
+        // 3. Auth UI & User Logins
         // ==========================================
-        
         document.getElementById('tab-login').addEventListener('click', () => {
             isLoginMode = true;
             document.getElementById('tab-login').classList.replace('text-slate-400', 'text-green-600');
@@ -605,9 +594,6 @@
             document.getElementById('auth-error').classList.add('hidden');
         });
 
-        // ------------------------------------------
-        // Login & Registration Logic
-        // ------------------------------------------
         document.getElementById('btn-auth-action').addEventListener('click', async () => {
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value.trim();
@@ -634,29 +620,18 @@
 
             try {
                 if (isLoginMode) {
-                    // Login Process
                     await signInWithEmailAndPassword(auth, email, password);
                 } else {
-                    // Registration Process
                     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                     const user = userCredential.user;
-                    
-                    // Save user profile info
                     await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'info'), {
-                        name: name,
-                        email: email,
-                        createdAt: Date.now()
+                        name: name, email: email, createdAt: Date.now()
                     });
-
-                    // Add to public users list for Admin Panel and Live Presence mapping
                     await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', user.uid), {
-                        uid: user.uid,
-                        name: name,
-                        email: email
+                        uid: user.uid, name: name, email: email
                     });
                 }
             } catch (error) {
-                console.error(error);
                 if (error.code === 'auth/email-already-in-use') {
                     errorDiv.textContent = "এই ইমেইলটি ইতিমধ্যে ব্যবহৃত হচ্ছে। অন্য ইমেইল দিন অথবা লগইন করুন।";
                 } else if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
@@ -673,22 +648,17 @@
             }
         });
 
-        // ------------------------------------------
-        // Forgot Password Logic
-        // ------------------------------------------
         document.getElementById('btn-forgot-password').addEventListener('click', async () => {
             const email = document.getElementById('email').value.trim();
             const errorDiv = document.getElementById('auth-error');
-            
             if (!email) {
                 errorDiv.textContent = "পাসওয়ার্ড রিসেট করতে আগে উপরে আপনার ইমেইলটি লিখুন, তারপর বাটনে ক্লিক করুন।";
                 errorDiv.classList.remove('hidden');
                 return;
             }
-            
             try {
                 await sendPasswordResetEmail(auth, email);
-                showModal("ইমেইল পাঠানো হয়েছে", "আপনার ইমেইলে পাসওয়ার্ড রিসেট লিংক পাঠানো হয়েছে। (Inbox বা Spam ফোল্ডার চেক করুন)", "success");
+                showModal("ইমেইল পাঠানো হয়েছে", "আপনার ইমেইলে পাসওয়ার্ড রিসেট লিংক পাঠানো হয়েছে।", "success");
             } catch (error) {
                 errorDiv.textContent = "রিসেট ইমেইল পাঠাতে সমস্যা: " + error.message;
                 errorDiv.classList.remove('hidden');
@@ -709,83 +679,95 @@
             }
         }
 
-
         // ==========================================
-        // 4. Feature: Live Presence Listener (Sorted by time)
+        // 4. Feature: SAFE Live Presence Listener 
         // ==========================================
-        function listenToLivePresence() {
+        async function listenToLivePresence() {
             const { dateStr } = updateDateDisplay();
             
-            // Listen to all attendance documents for today using collectionGroup
-            // (Note: Requires an index in Firebase if rules are tight, but usually works for small apps)
-            const q = query(collectionGroup(db, 'attendance'), where("date", "==", dateStr));
-            
-            if (unsubPresence) unsubPresence();
-            
-            unsubPresence = onSnapshot(q, async (snapshot) => {
-                let presentUsersData = [];
+            try {
+                // Fetch user list ONCE to avoid collectionGroup index issues
+                const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+                const usersSnap = await getDocs(usersRef);
                 
-                snapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    // If they have an entryTime but NO exitTime, they are currently in the office
-                    if (data.status === 'Present' && data.entryTime && !data.exitTime) {
-                        // The document path is: artifacts/APPID/users/UID/attendance/DATE
-                        const pathParts = docSnap.ref.path.split('/');
-                        const uid = pathParts[4]; // Extract UID from path
-                        presentUsersData.push({
-                            uid: uid,
-                            entryTime: data.entryTime,
-                            timestamp: data.timestamp || 0
-                        });
-                    }
-                });
+                const activeUsers = {}; // Holds real-time data locally
 
-                document.getElementById('live-present-count').textContent = presentUsersData.length;
-
-                // Build the UI List
-                const listEl = document.getElementById('presence-list');
-                listEl.innerHTML = '';
-                
-                if(presentUsersData.length === 0) {
-                    listEl.innerHTML = '<li class="text-center text-slate-500 py-4">এই মুহূর্তে কেউ অফিসে নেই।</li>';
-                    return;
-                }
-
-                // Sort the array by entryTime (earliest first)
-                presentUsersData.sort((a, b) => {
-                    const timeA = a.entryTime.replace(':', '');
-                    const timeB = b.entryTime.replace(':', '');
-                    return timeA - timeB;
-                });
-
-                // Fetch names and append to list
-                for (let i = 0; i < presentUsersData.length; i++) {
-                    const user = presentUsersData[i];
-                    const name = await getUserName(user.uid);
-                    const formattedTime = formatAMPM(user.entryTime);
+                const renderPresenceList = async () => {
+                    let presentUsersList = Object.values(activeUsers).filter(u => u.isPresent);
                     
-                    const li = document.createElement('li');
-                    li.className = "flex justify-between items-center px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-100 mb-2 transition-colors";
+                    document.getElementById('live-present-count').textContent = presentUsersList.length;
                     
-                    // Add 1st Badge for the very first person in the sorted list
-                    let badgeHtml = "";
-                    if (i === 0) {
-                        badgeHtml = `<span class="ml-2 bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5 rounded-full font-black shadow-sm">🥇 1st</span>`;
+                    const listEl = document.getElementById('presence-list');
+                    listEl.innerHTML = '';
+                    
+                    if(presentUsersList.length === 0) {
+                        listEl.innerHTML = '<li class="text-center text-slate-500 py-4">এই মুহূর্তে কেউ অফিসে নেই।</li>';
+                        return;
                     }
 
-                    li.innerHTML = `
-                        <div class="flex items-center gap-2">
-                            <div class="h-2 w-2 rounded-full bg-green-500"></div>
-                            <span class="font-semibold text-slate-700">${name} ${badgeHtml}</span>
-                        </div>
-                        <span class="text-xs text-slate-500 font-medium">${formattedTime}</span>
-                    `;
-                    listEl.appendChild(li);
-                }
-                
-            }, (error) => {
-                console.log("Presence listener error: ", error);
-            });
+                    // Sort by entry time
+                    presentUsersList.sort((a, b) => {
+                        const timeA = a.entryTime.replace(':', '');
+                        const timeB = b.entryTime.replace(':', '');
+                        return timeA - timeB;
+                    });
+
+                    for (let i = 0; i < presentUsersList.length; i++) {
+                        const user = presentUsersList[i];
+                        const name = await getUserName(user.uid);
+                        const formattedTime = formatAMPM(user.entryTime);
+                        
+                        const li = document.createElement('li');
+                        li.className = "flex justify-between items-center px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-100 mb-2 transition-colors";
+                        
+                        let badgeHtml = "";
+                        if (i === 0) {
+                            badgeHtml = `<span class="ml-2 bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5 rounded-full font-black shadow-sm">🥇 1st</span>`;
+                        }
+
+                        li.innerHTML = `
+                            <div class="flex items-center gap-2">
+                                <div class="h-2 w-2 rounded-full bg-green-500"></div>
+                                <span class="font-semibold text-slate-700">${name} ${badgeHtml}</span>
+                            </div>
+                            <span class="text-xs text-slate-500 font-medium">${formattedTime}</span>
+                        `;
+                        listEl.appendChild(li);
+                    }
+                };
+
+                // Clear old listeners safely
+                presenceUnsubs.forEach(unsub => unsub());
+                presenceUnsubs = [];
+
+                // Attach listener to each user's doc for TODAY
+                usersSnap.forEach(userDoc => {
+                    const uid = userDoc.data().uid;
+                    const docRef = doc(db, 'artifacts', appId, 'users', uid, 'attendance', dateStr);
+                    
+                    const unsub = onSnapshot(docRef, (docSnap) => {
+                        if (docSnap.exists()) {
+                            const data = docSnap.data();
+                            if (data.status === 'Present' && data.entryTime && !data.exitTime) {
+                                activeUsers[uid] = {
+                                    uid: uid,
+                                    entryTime: data.entryTime,
+                                    isPresent: true
+                                };
+                            } else {
+                                activeUsers[uid] = { isPresent: false };
+                            }
+                        } else {
+                            activeUsers[uid] = { isPresent: false };
+                        }
+                        renderPresenceList();
+                    });
+                    presenceUnsubs.push(unsub);
+                });
+
+            } catch (error) {
+                console.error("Error setting up presence listener:", error);
+            }
         }
 
 
@@ -796,7 +778,6 @@
             const select = document.getElementById('admin-user-select');
             select.innerHTML = '<option value="">লোড হচ্ছে...</option>';
             try {
-                // Fetch users list created during registration
                 const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
                 const usersSnap = await getDocs(usersRef);
                 
@@ -806,47 +787,35 @@
                     select.innerHTML += `<option value="${data.uid}">${data.name} (${data.email})</option>`;
                 });
             } catch(e) {
-                console.error("Admin Load Error:", e);
                 showModal("এরর", "স্টাফ তালিকা লোড করতে সমস্যা হয়েছে।", "error");
             }
         }
 
-        // Admin: Delete Specific Staff Completely
         document.getElementById('btn-admin-delete-staff').addEventListener('click', () => {
             if (!currentUser) return;
             const select = document.getElementById('admin-user-select');
             const uid = select.value;
-            
             if(!uid) return showModal("সতর্কতা", "ডিলিট করার জন্য আগে একজন স্টাফ নির্বাচন করুন।", "error");
-            
             const staffName = select.options[select.selectedIndex].text;
 
             showModal("সতর্কতা!", `আপনি কি নিশ্চিত যে "${staffName}"-কে মুছে ফেলতে চান? তার সমস্ত হাজিরার রেকর্ড এবং প্রোফাইল ডাটাবেজ থেকে মুছে যাবে।`, "error", async () => {
                 try {
-                    // 1. Delete all attendance records for this user
                     const attRef = collection(db, 'artifacts', appId, 'users', uid, 'attendance');
                     const attSnap = await getDocs(attRef);
                     let deletePromises = [];
-                    attSnap.forEach(docSnap => {
-                        deletePromises.push(deleteDoc(docSnap.ref));
-                    });
-                    
-                    // 2. Delete User Profile
+                    attSnap.forEach(docSnap => deletePromises.push(deleteDoc(docSnap.ref)));
                     deletePromises.push(deleteDoc(doc(db, 'artifacts', appId, 'users', uid, 'profile', 'info')));
-                    
-                    // 3. Delete from Public Users List
                     deletePromises.push(deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', uid)));
                     
                     await Promise.all(deletePromises);
-                    showModal("সফল", "স্টাফ এবং তার সমস্ত রেকর্ড সফলভাবে ফায়ারবেজ থেকে মুছে ফেলা হয়েছে।", "success");
-                    loadAdminPanel(); // Refresh list
+                    showModal("সফল", "স্টাফ এবং তার সমস্ত রেকর্ড সফলভাবে মুছে ফেলা হয়েছে।", "success");
+                    loadAdminPanel();
                 } catch(e) {
-                    showModal("এরর", "স্টাফ ডিলিট করতে সমস্যা হয়েছে: " + e.message, "error");
+                    showModal("এরর", e.message, "error");
                 }
             });
         });
 
-        // Admin: Add or Update Present Data (Date & Time)
         document.getElementById('btn-admin-mark-present').addEventListener('click', async () => {
             if (!currentUser) return;
             const uid = document.getElementById('admin-user-select').value;
@@ -860,28 +829,16 @@
             if(parts.length !== 3) return showModal("সতর্কতা", "সঠিক তারিখ ফরম্যাট ব্যবহার করুন (যেমন: 10.11.26)", "error");
             const monthYear = `${parseInt(parts[1])}-20${parts[2]}`;
             
-            const updateData = {
-                date: dateStr,
-                status: 'Present',
-                timestamp: Date.now(),
-                monthYear: monthYear,
-                location: { admin: true }
-            };
-
-            // Only update times if admin provided them
+            const updateData = { date: dateStr, status: 'Present', timestamp: Date.now(), monthYear: monthYear, location: { admin: true } };
             if(entryTime) updateData.entryTime = entryTime;
             if(exitTime) updateData.exitTime = exitTime;
 
             try {
-                // Using merge:true so we don't accidentally delete existing fields if they aren't provided here
                 await setDoc(doc(db, 'artifacts', appId, 'users', uid, 'attendance', dateStr), updateData, { merge: true });
                 showModal("সফল", "হাজিরা এবং সময় সফলভাবে সেভ/আপডেট করা হয়েছে।", "success");
-            } catch(e) {
-                showModal("এরর", e.message, "error");
-            }
+            } catch(e) { showModal("এরর", e.message, "error"); }
         });
 
-        // Admin: Delete Attendance
         document.getElementById('btn-admin-delete').addEventListener('click', async () => {
             if (!currentUser) return;
             const uid = document.getElementById('admin-user-select').value;
@@ -892,43 +849,31 @@
             try {
                 await deleteDoc(doc(db, 'artifacts', appId, 'users', uid, 'attendance', dateStr));
                 showModal("সফল", "হাজিরা রেকর্ড মুছে ফেলা হয়েছে।", "success");
-            } catch(e) {
-                showModal("এরর", e.message, "error");
-            }
+            } catch(e) { showModal("এরর", e.message, "error"); }
         });
 
-        // Admin: Delete All Staff
         document.getElementById('btn-admin-delete-all').addEventListener('click', () => {
             if (!currentUser) return;
-            showModal("সতর্কতা!", "আপনি কি নিশ্চিত যে সকল স্টাফের প্রোফাইল মুছে ফেলতে চান? এটি আর ফিরিয়ে আনা যাবেচ্ছ না।", "error", async () => {
+            showModal("সতর্কতা!", "আপনি কি নিশ্চিত যে সকল স্টাফের প্রোফাইল মুছে ফেলতে চান?", "error", async () => {
                 try {
                     const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
                     const usersSnap = await getDocs(usersRef);
-                    
                     let deletePromises = [];
-                    usersSnap.forEach(userDoc => {
-                        deletePromises.push(deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', userDoc.id)));
-                    });
-                    
+                    usersSnap.forEach(userDoc => deletePromises.push(deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', userDoc.id))));
                     await Promise.all(deletePromises);
                     showModal("সফল", "সকল স্টাফের প্রোফাইল সফলভাবে মুছে ফেলা হয়েছে।", "success");
-                    loadAdminPanel(); // Refresh list
-                } catch(e) {
-                    showModal("এরর", "স্টাফ ডিলিট করতে সমস্যা হয়েছে: " + e.message, "error");
-                }
+                    loadAdminPanel();
+                } catch(e) { showModal("এরর", e.message, "error"); }
             });
         });
 
-        // Logout Event Listeners
         document.getElementById('btn-admin-logout').addEventListener('click', () => signOut(auth));
         document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
 
 
         // ==========================================
-        // 6. Auth State & Actions
+        // 6. Auth State & Dashboard Data
         // ==========================================
-        
-        // Helper function for fast and smooth screen switching
         function switchScreen(screenId) {
             const screens = ['auth-screen', 'app-screen', 'admin-screen'];
             screens.forEach(id => {
@@ -962,7 +907,6 @@
 
                 snapshot.forEach((doc) => {
                     if (doc.data().status === 'Present') present++;
-                    // Check if there is data for today
                     if (doc.id === dateStr) {
                         todayEntry = doc.data().entryTime;
                         todayExit = doc.data().exitTime;
@@ -970,32 +914,24 @@
                 });
                 document.getElementById('stat-present').textContent = present;
                 
-                // Calculate Absent automatically
                 let workingDaysPassed = 0;
                 for (let i = 1; i <= now.getDate(); i++) {
                     const d = new Date(now.getFullYear(), now.getMonth(), i);
-                    if (d.getDay() !== 5) { // 5 means Friday
-                        workingDaysPassed++;
-                    }
+                    if (d.getDay() !== 5) workingDaysPassed++;
                 }
                 
                 let absent = workingDaysPassed - present;
                 if(absent < 0) absent = 0;
-                
                 document.getElementById('stat-absent').textContent = absent; 
 
-                // Update Today's Record Display
                 const recordContainer = document.getElementById('today-record-display');
                 const entryText = document.getElementById('entry-record-text');
                 const exitText = document.getElementById('exit-record-text');
-                
-                // Reset Early Bird Badge
                 document.getElementById('early-bird-badge').classList.add('hidden');
                 
                 if (todayEntry || todayExit) {
                     recordContainer.classList.remove('hidden');
                     
-                    // Check for Early Bird (Before 8:00 AM)
                     if(todayEntry) {
                         const [hr, min] = todayEntry.split(':').map(Number);
                         if (hr < 8 || (hr === 8 && min === 0)) {
@@ -1004,30 +940,25 @@
                     }
 
                     if (todayEntry && !todayExit) {
-                        // Show entry time
                         entryText.classList.remove('hidden');
                         document.getElementById('entry-time-val').textContent = formatAMPM(todayEntry);
                         
-                        // NEW: Work Duration Timer (Live per second in the header)
                         const durationElText = document.getElementById('work-duration-text');
                         const durationElVal = document.getElementById('work-duration-val');
                         durationElText.classList.remove('hidden');
-                        durationElText.classList.add('flex'); // Because it uses flex-col
+                        durationElText.classList.add('flex');
                         
                         const updateDuration = () => {
                             const [eHr, eMin] = todayEntry.split(':').map(Number);
-                            const now = new Date();
-                            
-                            // Calculate exact milliseconds difference
-                            const entryDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), eHr, eMin, 0);
-                            let diffMs = now.getTime() - entryDate.getTime();
+                            const n = new Date();
+                            const entryDate = new Date(n.getFullYear(), n.getMonth(), n.getDate(), eHr, eMin, 0);
+                            let diffMs = n.getTime() - entryDate.getTime();
                             if (diffMs < 0) diffMs = 0;
                             
                             const hrs = Math.floor(diffMs / (1000 * 60 * 60));
                             const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
                             const secs = Math.floor((diffMs % (1000 * 60)) / 1000);
                             
-                            // Compact Format: X ঘঃ Y মিঃ Z সেঃ
                             let timeStr = "";
                             if (hrs > 0) timeStr += `${hrs} ঘঃ `;
                             timeStr += `${mins.toString().padStart(2, '0')} মিঃ `;
@@ -1038,13 +969,10 @@
                         
                         updateDuration();
                         if(window.workTimer) clearInterval(window.workTimer);
-                        window.workTimer = setInterval(updateDuration, 1000); // Update every 1 second
+                        window.workTimer = setInterval(updateDuration, 1000);
 
                     } else {
-                        // Reset/hide entry time when they exit
                         entryText.classList.add('hidden');
-                        
-                        // Hide timer
                         const durationElText = document.getElementById('work-duration-text');
                         durationElText.classList.add('hidden');
                         durationElText.classList.remove('flex');
@@ -1052,7 +980,6 @@
                     }
 
                     if (todayExit) {
-                        // Show exit time
                         exitText.classList.remove('hidden');
                         document.getElementById('exit-time-val').textContent = formatAMPM(todayExit);
                     } else {
@@ -1063,13 +990,11 @@
                     entryText.classList.add('hidden');
                     exitText.classList.add('hidden');
                     
-                    // Hide timer
                     const durationElText = document.getElementById('work-duration-text');
                     durationElText.classList.add('hidden');
                     durationElText.classList.remove('flex');
                     if(window.workTimer) clearInterval(window.workTimer);
                 }
-
             }, (error) => {});
         }
 
@@ -1077,52 +1002,42 @@
             if (user) {
                 currentUser = user;
                 if(user.email === ADMIN_EMAIL) {
-                    // Admin Mode
                     switchScreen('admin-screen');
                     loadAdminPanel();
                 } else {
-                    // User Mode
                     switchScreen('app-screen');
-                    // Add slight delay to ensure DB writes from registration finished before fetching name
                     setTimeout(() => loadUserProfile(user.uid), 500); 
                     loadDashboardData(user.uid);
-                    listenToLivePresence(); // Start Live Presence listener
+                    listenToLivePresence(); // Start Safe Live Presence listener
                 }
             } else {
                 currentUser = null;
                 switchScreen('auth-screen');
                 if (unsubAttendance) unsubAttendance();
-                if (unsubPresence) unsubPresence();
+                if (presenceUnsubs) {
+                    presenceUnsubs.forEach(unsub => unsub());
+                    presenceUnsubs = [];
+                }
                 if (window.workTimer) clearInterval(window.workTimer);
             }
         });
 
-        // PDF Generation Logic
+        // PDF Logic
         document.getElementById('btn-download-report').addEventListener('click', async () => {
             if (!currentUser) return;
             const btn = document.getElementById('btn-download-report');
             const originalContent = btn.innerHTML;
-            
-            btn.innerHTML = `
-                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                রিপোর্ট তৈরি হচ্ছে...
-            `;
+            btn.innerHTML = `<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> রিপোর্ট তৈরি হচ্ছে...`;
             btn.disabled = true;
-
             try {
                 const now = new Date();
                 const currentMonthYear = `${now.getMonth() + 1}-${now.getFullYear()}`;
-                
-                // Fetch this month's attendance
                 const attendanceRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'attendance');
                 const q = query(attendanceRef, where("monthYear", "==", currentMonthYear));
                 const snap = await getDocs(q);
                 
                 const records = {};
-                snap.forEach(doc => {
-                    records[doc.id] = doc.data();
-                });
-
+                snap.forEach(doc => { records[doc.id] = doc.data(); });
                 const tbody = document.getElementById('report-table-body');
                 tbody.innerHTML = '';
                 
@@ -1132,7 +1047,6 @@
                 document.getElementById('report-staff-name').textContent = document.getElementById('display-user-name').textContent;
                 document.getElementById('report-month').textContent = `${monthsBn[now.getMonth()]} ${now.getFullYear()}`;
 
-                // Loop up to today's date
                 const today = now.getDate();
                 for (let i = 1; i <= today; i++) {
                     const d = new Date(now.getFullYear(), now.getMonth(), i);
@@ -1140,18 +1054,14 @@
                     const dayName = daysBn[d.getDay()];
                     
                     const record = records[dateStr];
-                    
-                    let entryTime = '-';
-                    let exitTime = '-';
-                    let statusHtml = '';
-                    let bgClass = 'bg-white';
+                    let entryTime = '-'; let exitTime = '-'; let statusHtml = ''; let bgClass = 'bg-white';
 
                     if (record && record.status === 'Present') {
                         entryTime = formatAMPM(record.entryTime) || '-';
                         exitTime = formatAMPM(record.exitTime) || '-';
                         statusHtml = '<span class="text-green-600 font-bold">উপস্থিত</span>';
                     } else {
-                        if (d.getDay() === 5) { // Friday
+                        if (d.getDay() === 5) {
                             statusHtml = '<span class="text-blue-500 font-bold">সাপ্তাহিক ছুটি</span>';
                             bgClass = 'bg-slate-50';
                         } else {
@@ -1162,35 +1072,16 @@
 
                     const tr = document.createElement('tr');
                     tr.className = `border border-slate-200 ${bgClass}`;
-                    tr.innerHTML = `
-                        <td class="p-3 border border-slate-200 font-medium">${dateStr}</td>
-                        <td class="p-3 border border-slate-200">${dayName}</td>
-                        <td class="p-3 border border-slate-200">${entryTime}</td>
-                        <td class="p-3 border border-slate-200">${exitTime}</td>
-                        <td class="p-3 border border-slate-200">${statusHtml}</td>
-                    `;
+                    tr.innerHTML = `<td class="p-3 border border-slate-200 font-medium">${dateStr}</td><td class="p-3 border border-slate-200">${dayName}</td><td class="p-3 border border-slate-200">${entryTime}</td><td class="p-3 border border-slate-200">${exitTime}</td><td class="p-3 border border-slate-200">${statusHtml}</td>`;
                     tbody.appendChild(tr);
                 }
 
-                // Call html2pdf
                 const element = document.getElementById('report-container');
-                const opt = {
-                  margin:       [15, 15, 15, 15],
-                  filename:     `Attendance_Report_${monthsBn[now.getMonth()]}.pdf`,
-                  image:        { type: 'jpeg', quality: 0.98 },
-                  html2canvas:  { scale: 2, useCORS: true },
-                  jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                };
-
+                const opt = { margin: [15, 15, 15, 15], filename: `Attendance_Report_${monthsBn[now.getMonth()]}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
                 await html2pdf().set(opt).from(element).save();
                 
-            } catch (err) {
-                console.error(err);
-                showModal("এরর", "রিপোর্ট ডাউনলোড করতে সমস্যা হয়েছে।", "error");
-            } finally {
-                btn.innerHTML = originalContent;
-                btn.disabled = false;
-            }
+            } catch (err) { showModal("এরর", "রিপোর্ট ডাউনলোড করতে সমস্যা হয়েছে।", "error");
+            } finally { btn.innerHTML = originalContent; btn.disabled = false; }
         });
 
         // ==========================================
@@ -1199,171 +1090,98 @@
         document.getElementById('attendance-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!currentUser) return;
-
             const submitBtn = document.getElementById('btn-submit');
             const spinner = document.getElementById('loading-spinner');
-            
-            submitBtn.disabled = true;
-            spinner.classList.remove('hidden');
+            submitBtn.disabled = true; spinner.classList.remove('hidden');
 
             const { dateStr } = updateDateDisplay();
             const now = new Date();
             const currentMonthYear = `${now.getMonth() + 1}-${now.getFullYear()}`;
-            
-            const timeType = document.getElementById('input-time-type').value; // 'entry' or 'exit'
-            const userSelectedTime = document.getElementById('input-time').value; // "HH:MM"
+            const timeType = document.getElementById('input-time-type').value; 
+            const userSelectedTime = document.getElementById('input-time').value; 
             
             if(!userSelectedTime) {
                 showModal("সতর্কতা", "দয়া করে সময় নির্বাচন করুন।", "error");
-                submitBtn.disabled = false;
-                spinner.classList.add('hidden');
+                submitBtn.disabled = false; spinner.classList.add('hidden');
                 return;
             }
 
-            // Check entry time limit (must be between 6:00 AM and 11:59 AM)
             if (timeType === 'entry') {
-                const currentHour = now.getHours();
-                const currentMinute = now.getMinutes();
-                // Check if outside 6 AM to 11 AM range (Keeping up to 11 for edge cases, adjust as needed)
+                const currentHour = now.getHours(); const currentMinute = now.getMinutes();
                 if (currentHour < 6 || currentHour > 11 || (currentHour === 11 && currentMinute > 0)) {
                     showModal("সময় পেরিয়ে গেছে", "প্রবেশের হাজিরা কেবল প্রতিদিন সকাল ৬:০০ থেকে ১১:০০ পর্যন্ত দেওয়া যাবে।", "error");
-                    submitBtn.disabled = false;
-                    spinner.classList.add('hidden');
+                    submitBtn.disabled = false; spinner.classList.add('hidden');
                     return;
                 }
             }
 
-            // Check if already submitted for this specific entry/exit type
             try {
                 const checkRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'attendance', dateStr);
                 const checkSnap = await getDoc(checkRef);
-                
                 if (timeType === 'entry') {
                     if (checkSnap.exists() && checkSnap.data().entryTime) {
                         showModal("সতর্কতা", "আপনি ইতিমধ্যে আজকের প্রবেশের সময় (Entry) জমা দিয়েছেন।", "info");
-                        submitBtn.disabled = false;
-                        spinner.classList.add('hidden');
-                        return;
+                        submitBtn.disabled = false; spinner.classList.add('hidden'); return;
                     }
                 }
-
                 if (timeType === 'exit') {
                     if (!checkSnap.exists() || !checkSnap.data().entryTime) {
                         showModal("সতর্কতা", "আপনি আজ প্রবেশের হাজিরা দেননি। কেবলমাত্র প্রবেশের হাজিরা থাকলেই বের হওয়ার সময় জমা দেওয়া যাবে।", "error");
-                        submitBtn.disabled = false;
-                        spinner.classList.add('hidden');
-                        return;
+                        submitBtn.disabled = false; spinner.classList.add('hidden'); return;
                     }
                     if (checkSnap.exists() && checkSnap.data().exitTime) {
                         showModal("সতর্কতা", "আপনি ইতিমধ্যে আজকের বের হওয়ার সময় (Exit) জমা দিয়েছেন।", "info");
-                        submitBtn.disabled = false;
-                        spinner.classList.add('hidden');
-                        return;
+                        submitBtn.disabled = false; spinner.classList.add('hidden'); return;
                     }
                 }
             } catch (err) {
                 showModal("ডাটাবেজ এরর", err.message, "error");
-                submitBtn.disabled = false;
-                spinner.classList.add('hidden');
-                return;
+                submitBtn.disabled = false; spinner.classList.add('hidden'); return;
             }
 
-            // Get Geolocation
             if ("geolocation" in navigator) {
                 navigator.geolocation.getCurrentPosition(
                     async (position) => {
-                        const userLat = position.coords.latitude;
-                        const userLon = position.coords.longitude;
-                        
+                        const userLat = position.coords.latitude; const userLon = position.coords.longitude;
                         const distance = getDistanceFromLatLonInMeters(userLat, userLon, TARGET_LAT, TARGET_LON);
                         
                         if (distance > MAX_DISTANCE_METERS) {
-                            showModal("লোকেশন ত্রুটি", `অফিসে এসে হাজিরা দিন। (আপনার বর্তমান লোকেশন অফিস থেকে প্রায় ${Math.round(distance)} মিটার দূরে দেখাচ্ছে। ల্যাপটপের বদলে মোবাইলের GPS অন করে ট্রাই করুন)`, "error");
-                            submitBtn.disabled = false;
-                            spinner.classList.add('hidden');
-                            return;
+                            showModal("লোকেশন ত্রুটি", `অফিসে এসে হাজিরা দিন। (আপনার বর্তমান লোকেশন অফিস থেকে প্রায় ${Math.round(distance)} মিটার দূরে দেখাচ্ছে। ল্যাপটপের বদলে মোবাইলের GPS অন করে ট্রাই করুন)`, "error");
+                            submitBtn.disabled = false; spinner.classList.add('hidden'); return;
                         }
 
-                        // Save to Firestore
                         try {
                             const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'attendance', dateStr);
-                            
-                            const attendanceData = {
-                                date: dateStr,
-                                status: 'Present',
-                                timestamp: Date.now(),
-                                monthYear: currentMonthYear,
-                                location: { lat: userLat, lon: userLon, distance: distance }
-                            };
-                            
-                            if (timeType === 'entry') {
-                                attendanceData.entryTime = userSelectedTime;
-                            } else {
-                                attendanceData.exitTime = userSelectedTime;
-                            }
+                            const attendanceData = { date: dateStr, status: 'Present', timestamp: Date.now(), monthYear: currentMonthYear, location: { lat: userLat, lon: userLon, distance: distance } };
+                            if (timeType === 'entry') attendanceData.entryTime = userSelectedTime; else attendanceData.exitTime = userSelectedTime;
 
-                            // Use merge: true to avoid overwriting Entry time with Exit time
                             await setDoc(docRef, attendanceData, { merge: true });
                             
-                            // Send Data to n8n Webhook
                             const staffName = document.getElementById('display-user-name').textContent;
                             const typeMsg = timeType === 'entry' ? "প্রবেশের সময়" : "বের হওয়ার সময়";
                             
-                            const webhookData = {
-                                name: staffName,
-                                email: currentUser.email,
-                                date: dateStr,
-                                day: document.getElementById('display-day').textContent,
-                                type: typeMsg,
-                                time: userSelectedTime,
-                                status: 'Present',
-                                distance_meters: Math.round(distance)
-                            };
-
-                            const n8nWebhookUrl = "https://rpl2.app.n8n.cloud/webhook/attendance"; 
+                            const webhookData = { name: staffName, email: currentUser.email, date: dateStr, day: document.getElementById('display-day').textContent, type: typeMsg, time: userSelectedTime, status: 'Present', distance_meters: Math.round(distance) };
+                            fetch("https://rpl2.app.n8n.cloud/webhook/attendance", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(webhookData) }).catch(err => console.log("Webhook Error:", err));
                             
-                            fetch(n8nWebhookUrl, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(webhookData)
-                            }).catch(err => console.log("Webhook Error:", err));
-                            
-                            // Confetti Animation for successful submission
-                            confetti({ 
-                                particleCount: 150, 
-                                spread: 70, 
-                                origin: { y: 0.6 }, 
-                                colors: ['#10b981', '#3b82f6', '#f59e0b'] 
-                            });
-
+                            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#10b981', '#3b82f6', '#f59e0b'] });
                             showModal("অসাধারণ! 🎉", `আপনার আজকের ${typeMsg} সফলভাবে জমা হয়েছে।`, "success");
-                        } catch (err) {
-                            showModal("সেভ এরর", err.message, "error");
-                        } finally {
-                            submitBtn.disabled = false;
-                            spinner.classList.add('hidden');
-                        }
+                        } catch (err) { showModal("সেভ এরর", err.message, "error");
+                        } finally { submitBtn.disabled = false; spinner.classList.add('hidden'); }
                     },
                     (error) => {
                         let errorMsg = "হাজিরা দেওয়ার জন্য লোকেশন পারমিশন দিন।";
-                        if (error.code === 1) {
-                            errorMsg = "অ্যাপে লোকেশন ব্যবহারের পারমিশন নেই। দয়া করে ফোনের Settings > Apps থেকে এই অ্যাপটিকে Location পারমিশন দিন।";
-                        } else if (error.code === 2) {
-                            errorMsg = "জিপিএস সিগন্যাল পাওয়া যাচ্ছে না। লোকেশন অফ করে আবার অন করুন।";
-                        } else if (error.code === 3) {
-                            errorMsg = "লোকেশন কানেক্ট হতে অনেক বেশি সময় লাগছে (Timeout)। আবার চেষ্টা করুন।";
-                        }
+                        if (error.code === 1) errorMsg = "অ্যাপে লোকেশন ব্যবহারের পারমিশন নেই। দয়া করে ফোনের Settings > Apps থেকে এই অ্যাপটিকে Location পারমিশন দিন।";
+                        else if (error.code === 2) errorMsg = "জিপিএস সিগন্যাল পাওয়া যাচ্ছে না। লোকেশন অফ করে আবার অন করুন।";
+                        else if (error.code === 3) errorMsg = "লোকেশন কানেক্ট হতে অনেক বেশি সময় লাগছে (Timeout)। আবার চেষ্টা করুন।";
                         
                         showModal("লোকেশন সমস্যা", errorMsg, "error");
-                        submitBtn.disabled = false;
-                        spinner.classList.add('hidden');
+                        submitBtn.disabled = false; spinner.classList.add('hidden');
                     },
                     { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
                 );
             } else {
                 showModal("অসমর্থিত ডিভাইস", "আপনার ডিভাইসে লোকেশন ট্র্যাকিং সাপোর্ট করে না।", "error");
-                submitBtn.disabled = false;
-                spinner.classList.add('hidden');
+                submitBtn.disabled = false; spinner.classList.add('hidden');
             }
         });
 
