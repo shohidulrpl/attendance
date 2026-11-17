@@ -680,7 +680,7 @@
         }
 
         // ==========================================
-        // 4. Feature: SAFE Live Presence Listener 
+        // 4. Feature: SAFE Live Presence Listener (Fixed Duplicates)
         // ==========================================
         async function listenToLivePresence() {
             const { dateStr } = updateDateDisplay();
@@ -697,7 +697,6 @@
                     document.getElementById('live-present-count').textContent = presentUsersList.length;
                     
                     const listEl = document.getElementById('presence-list');
-                    listEl.innerHTML = '';
                     
                     if(presentUsersList.length === 0) {
                         listEl.innerHTML = '<li class="text-center text-slate-500 py-4">এই মুহূর্তে কেউ অফিসে নেই।</li>';
@@ -710,28 +709,28 @@
                         return timeA - timeB;
                     });
 
-                    for (let i = 0; i < presentUsersList.length; i++) {
-                        const user = presentUsersList[i];
+                    // Promise.all prevents async race conditions (duplicate printing) during DOM update
+                    const listItemsHtml = await Promise.all(presentUsersList.map(async (user, i) => {
                         const name = await getUserName(user.uid);
                         const formattedTime = formatAMPM(user.entryTime);
-                        
-                        const li = document.createElement('li');
-                        li.className = "flex justify-between items-center px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-100 mb-2 transition-colors";
                         
                         let badgeHtml = "";
                         if (i === 0) {
                             badgeHtml = `<span class="ml-2 bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5 rounded-full font-black shadow-sm">🥇 1st</span>`;
                         }
 
-                        li.innerHTML = `
-                            <div class="flex items-center gap-2">
-                                <div class="h-2 w-2 rounded-full bg-green-500"></div>
-                                <span class="font-semibold text-slate-700">${name} ${badgeHtml}</span>
-                            </div>
-                            <span class="text-xs text-slate-500 font-medium">${formattedTime}</span>
+                        return `
+                            <li class="flex justify-between items-center px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-100 mb-2 transition-colors">
+                                <div class="flex items-center gap-2">
+                                    <div class="h-2 w-2 rounded-full bg-green-500"></div>
+                                    <span class="font-semibold text-slate-700">${name} ${badgeHtml}</span>
+                                </div>
+                                <span class="text-xs text-slate-500 font-medium">${formattedTime}</span>
+                            </li>
                         `;
-                        listEl.appendChild(li);
-                    }
+                    }));
+                    
+                    listEl.innerHTML = listItemsHtml.join('');
                 };
 
                 presenceUnsubs.forEach(unsub => unsub());
@@ -1035,7 +1034,7 @@
                 tbody.innerHTML = '';
                 
                 const monthsBn = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
-                const daysBn = ["রবিবার", "সোমবার", "মঙ্গলবার", "বুধবার", "বৃহস্পতিবার", "শুক্রবার", "শনিবার"];
+                const daysBn = ["রবিবার", "সোমবার", " মঙ্গলবার", "বুধবার", "বৃহস্পতিবার", "শুক্রবার", "শনিবার"];
                 
                 document.getElementById('report-staff-name').textContent = document.getElementById('display-user-name').textContent;
                 document.getElementById('report-month').textContent = `${monthsBn[now.getMonth()]} ${now.getFullYear()}`;
